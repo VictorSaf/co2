@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="64" height="64" rx="8" fill="#F8FAFC"/>
+  
+  <!-- Crucea elvețiană stilizată -->
+  <rect x="10" y="10" width="20" height="20" rx="2" fill="#D80027"/>
+  <rect x="15" y="15" width="10" height="2" fill="white"/>
+  <rect x="15" y="23" width="10" height="2" fill="white"/>
+  <rect x="19" y="11" width="2" height="18" fill="white"/>
+  
+  <!-- Simbolul CO2 - molecule -->
+  <circle cx="40" cy="42" r="10" fill="#34A853" opacity="0.9"/>
+  <circle cx="50" cy="36" r="6" fill="#4285F4" opacity="0.8"/>
+  <circle cx="50" cy="48" r="6" fill="#4285F4" opacity="0.8"/>
+  
+  <!-- Linie de conectare -->
+  <path d="M30 20L40 42" stroke="#1F2937" stroke-width="2" stroke-dasharray="2 2"/>
+</svg>
