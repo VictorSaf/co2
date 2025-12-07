@@ -8,7 +8,7 @@ A professional simulation of a CO2 emissions certificate trading platform. This 
 - **CER to EUA Conversion**: Convert Chinese (CER) certificates to European (EUA) certificates
 - **Certificate Verification**: Verify EUA certificates with external registries
 - **Emissions Management**: Surrender certificates to offset CO2 emissions
-- **Real-time Market Data**: Live updates of certificate prices and offers
+- **Real-time Market Data**: Live EU ETS (EUA) prices from free sources, updated every 5 minutes (with optional API key for enhanced data)
 - **Portfolio Management**: Track your certificates and their status
 - **Interactive Dashboard**: Visualize your portfolio, market trends, and emissions compliance
 
@@ -35,12 +35,21 @@ A professional simulation of a CO2 emissions certificate trading platform. This 
 npm install
 ```
 
-2. Start the development server
+2. (Optional) Set up API key for enhanced price data
+   - Copy `.env.example` to `.env`
+   - Get a free API key from [OilPriceAPI](https://oilpriceapi.com) for real-time prices
+   - Add your API key to `.env`:
+   ```
+   VITE_OILPRICE_API_KEY=your_api_key_here
+   ```
+   - Note: The app works without the API key and uses free price sources with realistic market simulation
+
+3. Start the development server
 ```bash
 npm run dev
 ```
 
-3. Open your browser and navigate to `http://localhost:5173`
+4. Open your browser and navigate to `http://localhost:3000`
 
 ## Login Credentials
 

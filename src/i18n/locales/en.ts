@@ -392,5 +392,24 @@ export default {
   "you": "You",
   "thirdParty": "Market Participant",
   "anonymizedActivity": "A market participant performed a {type} operation",
-  "approximately": "Approx."
+  "approximately": "Approx.",
+  
+  // Live Price Ticker
+  "liveEUAPrice": "Live EU ETS Price",
+  "liveCERPrice": "Live Chinese CER Price",
+  "livePrices": "Live Prices",
+  "conversionPrice": "Conversion Price",
+  "discountRange": "6-12% discount",
+  "dependingOnVolume": "depending on volume",
+  "volumeDiscountInfo": "Volume Discounts",
+  "minVolumeTrade": "Min. volume trade 10 Mio EUR.",
+  "volumeTier1": "10 Mio to 15 Mio EUR trade volume",
+  "volumeTier2": "15 Mio to 18 Mio trade volume",
+  "volumeTier3": "18 Mio to 20 Mio trade volume",
+  "volumeTier4": "more than 20 Mio trade volume",
+  "discount": "discount",
+  "live": "LIVE",
+  "updating": "Updating...",
+  "refresh": "Refresh",
+  "usingMarketData": "Using market data as fallback"
 };

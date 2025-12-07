@@ -10,7 +10,7 @@ Chart.register(...registerables);
 
 export default function Dashboard() {
   const { portfolio, emissions } = useCertificates();
-  const { marketStats } = useStats();
+  const { marketStats, realTimeEUA } = useStats();
   const chartRef = useRef<HTMLCanvasElement>(null);
   const chartInstanceRef = useRef<Chart | null>(null);
   const { t } = useTranslation();
@@ -104,6 +104,7 @@ export default function Dashboard() {
         chartInstanceRef.current.destroy();
       }
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [marketStats.priceHistory]);
 
   return (
@@ -151,8 +152,22 @@ export default function Dashboard() {
                 <p className="text-2xl font-semibold text-primary-600">€{marketStats.averagePriceCER.toFixed(2)}</p>
               </div>
               <div>
-                <p className="text-sm text-gray-500">{t('euaPrice')}</p>
-                <p className="text-2xl font-semibold text-secondary-600">€{marketStats.averagePriceEUA.toFixed(2)}</p>
+                <div className="flex items-center justify-between">
+                  <p className="text-sm text-gray-500">{t('euaPrice')}</p>
+                  {realTimeEUA.price !== null && (
+                    <span className="text-xs text-green-600 font-medium">
+                      {t('live') || 'LIVE'}
+                    </span>
+                  )}
+                </div>
+                <p className="text-2xl font-semibold text-secondary-600">
+                  €{marketStats.averagePriceEUA.toFixed(2)}
+                </p>
+                {realTimeEUA.change24h !== null && realTimeEUA.change24h !== 0 && (
+                  <p className={`text-xs mt-1 ${realTimeEUA.change24h > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                    {realTimeEUA.change24h > 0 ? '+' : ''}{realTimeEUA.change24h.toFixed(2)}% (24h)
+                  </p>
+                )}
               </div>
               <div>
                 <p className="text-sm text-gray-500">{t('24hCerVolume')}</p>

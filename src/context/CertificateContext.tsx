@@ -1,10 +1,10 @@
 import { createContext, useContext, useState, ReactNode, useEffect, useCallback } from 'react';
 import { v4 as uuidv4 } from 'uuid';
-import { format, addMinutes } from 'date-fns';
+import { addMinutes } from 'date-fns';
 import { Certificate, Portfolio, MarketOffer, Transaction, CertificateType, CO2Emissions } from '../types';
 import { useAuth } from './AuthContext';
-import { sellers, getRandomSeller, getSellerById } from '../data/sellers';
-import { addActivity, initializeActivityHistory, ActivityType } from '../data/activityHistory';
+import { getRandomSeller } from '../data/sellers';
+import { addActivity, initializeActivityHistory } from '../data/activityHistory';
 
 interface CertificateContextType {
   portfolio: Portfolio;
@@ -15,36 +15,96 @@ interface CertificateContextType {
   convertCertificate: (certificate: Certificate) => Promise<boolean>;
   verifyCertificate: (certificate: Certificate) => Promise<boolean>;
   surrenderCertificate: (certificate: Certificate) => Promise<boolean>;
+  updateMarketOffers: (updater: (offers: MarketOffer[]) => MarketOffer[]) => void;
 }
 
 const CertificateContext = createContext<CertificateContextType | undefined>(undefined);
 
-// Initial market offers - folosind entități reale
-const initialCEROffers: MarketOffer[] = Array(10).fill(null).map(() => {
-  const seller = getRandomSeller('CER');
-  return {
-    id: uuidv4(),
-    sellerId: seller.id,
-    sellerName: seller.name,
-    type: 'CER' as CertificateType,
-    amount: Math.floor(Math.random() * 5000) + 1000,
-    price: parseFloat((Math.random() * 5 + 38).toFixed(2)), // 38-43 EUR
-    timestamp: new Date(),
-  };
-});
+// Helper function to generate initial offers with best price matching live price
+// All offers are ensured to be at or above live price
+function generateInitialOffers(
+  type: 'CER' | 'EUA',
+  count: number,
+  livePrice: number | null,
+  defaultMinPrice: number,
+  defaultMaxPrice: number
+): MarketOffer[] {
+  const offers: MarketOffer[] = [];
+  const basePrice = livePrice !== null ? livePrice : (defaultMinPrice + defaultMaxPrice) / 2;
+  const minPrice = livePrice !== null ? livePrice : defaultMinPrice;
+  
+  for (let i = 0; i < count; i++) {
+    const seller = getRandomSeller(type);
+    let price: number;
+    
+    if (i === 0 && livePrice !== null) {
+      // First offer always matches live price (best price)
+      price = livePrice;
+    } else {
+      // Other offers are priced higher with variation, but never below live price
+      const priceVariation = defaultMaxPrice - basePrice;
+      price = parseFloat((basePrice + Math.random() * priceVariation * 0.3 + 0.5).toFixed(2));
+      price = Math.max(minPrice, price); // Ensure never below live price
+    }
+    
+    offers.push({
+      id: uuidv4(),
+      sellerId: seller.id,
+      sellerName: seller.name,
+      type: type as CertificateType,
+      amount: Math.floor(Math.random() * (type === 'CER' ? 5000 : 3000)) + (type === 'CER' ? 1000 : 500),
+      price: price,
+      timestamp: new Date(),
+    });
+  }
+  
+  // Sort offers by price (lowest first)
+  return offers.sort((a, b) => a.price - b.price);
+}
 
-const initialEUAOffers: MarketOffer[] = Array(8).fill(null).map(() => {
-  const seller = getRandomSeller('EUA');
-  return {
-    id: uuidv4(),
-    sellerId: seller.id,
-    sellerName: seller.name,
-    type: 'EUA' as CertificateType,
-    amount: Math.floor(Math.random() * 3000) + 500,
-    price: parseFloat((Math.random() * 8 + 58).toFixed(2)), // 58-66 EUR
-    timestamp: new Date(),
-  };
-});
+// Helper function to ensure best price matches live price and all offers are at or above live price
+function ensureBestPriceMatchesLivePrice(
+  offers: MarketOffer[],
+  type: 'CER' | 'EUA',
+  livePrice: number | null
+): MarketOffer[] {
+  if (livePrice === null) return offers;
+  
+  const typeOffers = offers.filter(o => o.type === type);
+  if (typeOffers.length === 0) return offers;
+  
+  // Sort to find the best (lowest) price offer
+  const sortedTypeOffers = [...typeOffers].sort((a, b) => a.price - b.price);
+  const bestOffer = sortedTypeOffers[0];
+  
+  // Update all offers of this type to ensure they're at or above live price
+  const updatedOffers = offers.map(offer => {
+    if (offer.type === type) {
+      // If this is the best (lowest) price offer, set it to live price exactly
+      if (offer.id === bestOffer.id) {
+        if (Math.abs(offer.price - livePrice) > 0.01) {
+          return {
+            ...offer,
+            price: livePrice,
+            timestamp: new Date()
+          };
+        }
+      } else {
+        // For all other offers, ensure they're at or above live price
+        if (offer.price < livePrice) {
+          return {
+            ...offer,
+            price: livePrice,
+            timestamp: new Date()
+          };
+        }
+      }
+    }
+    return offer;
+  });
+  
+  return updatedOffers;
+}
 
 // Initial emissions data
 const initialEmissions: CO2Emissions = {
@@ -61,12 +121,17 @@ export function CertificateProvider({ children }: { children: ReactNode }) {
     totalEUA: 0,
     convertingCER: 0
   });
-  const [marketOffers, setMarketOffers] = useState<MarketOffer[]>([
-    ...initialCEROffers,
-    ...initialEUAOffers
-  ]);
+  
+  // Initialize market offers as empty - MarketOffersSync will create them with live prices
+  const [marketOffers, setMarketOffers] = useState<MarketOffer[]>([]);
+  
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [emissions, setEmissions] = useState<CO2Emissions>(initialEmissions);
+  
+  // Expose updateMarketOffers function
+  const updateMarketOffers = useCallback((updater: (offers: MarketOffer[]) => MarketOffer[]) => {
+    setMarketOffers(updater);
+  }, []);
   
   // Inițializare istoric activități
   useEffect(() => {
@@ -84,7 +149,7 @@ export function CertificateProvider({ children }: { children: ReactNode }) {
         const parsedPortfolio = JSON.parse(storedPortfolio);
         setPortfolio({
           ...parsedPortfolio,
-          certificates: parsedPortfolio.certificates.map((cert: any) => ({
+          certificates: parsedPortfolio.certificates.map((cert: Certificate) => ({
             ...cert,
             purchasedAt: cert.purchasedAt ? new Date(cert.purchasedAt) : undefined,
             conversionStartedAt: cert.conversionStartedAt ? new Date(cert.conversionStartedAt) : undefined,
@@ -95,7 +160,7 @@ export function CertificateProvider({ children }: { children: ReactNode }) {
       }
       
       if (storedTransactions) {
-        setTransactions(JSON.parse(storedTransactions).map((tx: any) => ({
+        setTransactions(JSON.parse(storedTransactions).map((tx: Transaction) => ({
           ...tx,
           timestamp: new Date(tx.timestamp)
         })));
@@ -170,45 +235,7 @@ export function CertificateProvider({ children }: { children: ReactNode }) {
     return () => clearInterval(interval);
   }, [user]);
   
-  // Simulate market price changes
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setMarketOffers(prev => {
-        const updatedOffers = prev.map(offer => {
-          // 30% chance to update price
-          if (Math.random() < 0.3) {
-            const priceChange = parseFloat((Math.random() * 0.5 - 0.25).toFixed(2)); // -0.25 to +0.25 EUR
-            return {
-              ...offer,
-              price: Math.max(offer.type === 'CER' ? 37 : 57, parseFloat((offer.price + priceChange).toFixed(2)))
-            };
-          }
-          return offer;
-        });
-        
-        // 5% chance to add a new offer
-        if (Math.random() < 0.05) {
-          const type = Math.random() < 0.6 ? 'CER' : 'EUA';
-          const seller = getRandomSeller(type);
-          
-          const newOffer: MarketOffer = {
-            id: uuidv4(),
-            sellerId: seller.id,
-            sellerName: seller.name,
-            type: type,
-            amount: Math.floor(Math.random() * (type === 'CER' ? 5000 : 3000)) + (type === 'CER' ? 1000 : 500),
-            price: parseFloat((Math.random() * (type === 'CER' ? 5 : 8) + (type === 'CER' ? 38 : 58)).toFixed(2)),
-            timestamp: new Date()
-          };
-          return [...updatedOffers, newOffer];
-        }
-        
-        return updatedOffers;
-      });
-    }, 30000);
-    
-    return () => clearInterval(interval);
-  }, []);
+  // Market simulation is handled by MarketOffersSync component which has access to live prices
   
   const purchaseCertificate = useCallback(async (offer: MarketOffer): Promise<boolean> => {
     if (!user) return false;
@@ -464,7 +491,8 @@ export function CertificateProvider({ children }: { children: ReactNode }) {
         purchaseCertificate, 
         convertCertificate,
         verifyCertificate,
-        surrenderCertificate
+        surrenderCertificate,
+        updateMarketOffers
       }}
     >
       {children}

@@ -45,7 +45,7 @@ export default function Emissions() {
       } else {
         setSurrenderStatus('error');
       }
-    } catch (error) {
+    } catch {
       setSurrenderStatus('error');
     }
   };
@@ -110,6 +110,7 @@ export default function Emissions() {
         chartInstanceRef.current.destroy();
       }
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [emissions]);
 
   return (

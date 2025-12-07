@@ -392,5 +392,24 @@ export default {
   "you": "您",
   "thirdParty": "市场参与者",
   "anonymizedActivity": "一位市场参与者执行了{type}操作",
-  "approximately": "约"
+  "approximately": "约",
+  
+  // Live Price Ticker
+  "liveEUAPrice": "实时欧盟排放交易体系价格",
+  "liveCERPrice": "实时中国核证减排量价格",
+  "livePrices": "实时价格",
+  "conversionPrice": "转换价格",
+  "discountRange": "6-12%折扣",
+  "dependingOnVolume": "取决于数量",
+  "volumeDiscountInfo": "数量折扣",
+  "minVolumeTrade": "最低交易量 1000万欧元。",
+  "volumeTier1": "1000万至1500万欧元交易量",
+  "volumeTier2": "1500万至1800万交易量",
+  "volumeTier3": "1800万至2000万交易量",
+  "volumeTier4": "超过2000万交易量",
+  "discount": "折扣",
+  "live": "实时",
+  "updating": "更新中...",
+  "refresh": "刷新",
+  "usingMarketData": "使用市场数据作为备用"
 };

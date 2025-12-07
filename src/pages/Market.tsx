@@ -4,20 +4,19 @@ import { useCertificates } from '../context/CertificateContext';
 import { useAuth } from '../context/AuthContext';
 import { MarketOffer } from '../types';
 import { useTranslation } from 'react-i18next';
+import LivePriceTicker from '../components/LivePriceTicker';
 
 export default function Market() {
   const { marketOffers, purchaseCertificate } = useCertificates();
   const { user } = useAuth();
   const { t } = useTranslation();
-  const [activeTab, setActiveTab] = useState<'CER' | 'EUA'>('CER');
-  const [isPurchasing, setIsPurchasing] = useState(false);
   const [selectedOffer, setSelectedOffer] = useState<MarketOffer | null>(null);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [purchaseStatus, setPurchaseStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [errorMessage, setErrorMessage] = useState('');
   
-  const cerOffers = marketOffers.filter(offer => offer.type === 'CER');
-  const euaOffers = marketOffers.filter(offer => offer.type === 'EUA');
+  // Sort offers by price (lowest first) to ensure best price is shown first
+  const cerOffers = marketOffers.filter(offer => offer.type === 'CER').sort((a, b) => a.price - b.price);
   
   const handleBuy = (offer: MarketOffer) => {
     setSelectedOffer(offer);
@@ -36,7 +35,6 @@ export default function Market() {
     }
     
     setPurchaseStatus('loading');
-    setIsPurchasing(true);
     
     try {
       const success = await purchaseCertificate(selectedOffer);
@@ -45,18 +43,15 @@ export default function Market() {
         setTimeout(() => {
           setShowConfirmModal(false);
           setPurchaseStatus('idle');
-          setIsPurchasing(false);
           setSelectedOffer(null);
         }, 2000);
       } else {
         setPurchaseStatus('error');
         setErrorMessage(t('failedToPurchase'));
-        setIsPurchasing(false);
       }
-    } catch (error) {
+    } catch {
       setPurchaseStatus('error');
       setErrorMessage(t('errorOccurred'));
-      setIsPurchasing(false);
     }
   };
   
@@ -72,33 +67,13 @@ export default function Market() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <h1 className="text-2xl font-semibold text-gray-900 mb-6">{t('marketTitle')}</h1>
         
-        {/* Market Tabs */}
+        {/* Live Price Ticker */}
+        <div className="mb-6">
+          <LivePriceTicker />
+        </div>
+        
+        {/* Market Offers */}
         <div className="bg-white rounded-lg shadow mb-8">
-          <div className="border-b border-gray-200">
-            <nav className="-mb-px flex" aria-label="Tabs">
-              <button
-                onClick={() => setActiveTab('CER')}
-                className={`${
-                  activeTab === 'CER'
-                    ? 'border-primary-500 text-primary-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                } w-1/2 py-4 px-1 text-center border-b-2 font-medium text-sm sm:text-base`}
-              >
-                {t('chineseCertificates')}
-              </button>
-              <button
-                onClick={() => setActiveTab('EUA')}
-                className={`${
-                  activeTab === 'EUA'
-                    ? 'border-secondary-500 text-secondary-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                } w-1/2 py-4 px-1 text-center border-b-2 font-medium text-sm sm:text-base`}
-              >
-                {t('europeanCertificates')}
-              </button>
-            </nav>
-          </div>
-          
           <div className="p-4 sm:p-6">
             <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-gray-300">
@@ -125,7 +100,7 @@ export default function Market() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200">
-                  {(activeTab === 'CER' ? cerOffers : euaOffers).map((offer) => (
+                  {cerOffers.map((offer) => (
                     <tr key={offer.id}>
                       <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-0">
                         {offer.sellerName}
@@ -155,7 +130,7 @@ export default function Market() {
                     </tr>
                   ))}
                   
-                  {(activeTab === 'CER' ? cerOffers.length === 0 : euaOffers.length === 0) && (
+                  {cerOffers.length === 0 && (
                     <tr>
                       <td colSpan={6} className="py-4 text-sm text-gray-500 text-center">
                         {t('noOffersAvailable')}
@@ -167,16 +142,10 @@ export default function Market() {
             </div>
             
             <div className="mt-6 bg-gray-50 p-4 rounded-md">
-              <h3 className="text-sm font-medium text-gray-500 mb-2">{t('aboutCertificates', {0: activeTab})}</h3>
-              {activeTab === 'CER' ? (
-                <p className="text-sm text-gray-600">
-                  {t('cerDescription')}
-                </p>
-              ) : (
-                <p className="text-sm text-gray-600">
-                  {t('euaDescription')}
-                </p>
-              )}
+              <h3 className="text-sm font-medium text-gray-500 mb-2">{t('aboutCertificates', {0: 'CER'})}</h3>
+              <p className="text-sm text-gray-600">
+                {t('cerDescription')}
+              </p>
             </div>
           </div>
         </div>

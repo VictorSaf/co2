@@ -1,10 +1,11 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useStats } from '../context/StatsContext';
-import { format, subMonths, subWeeks, subYears, parseISO } from 'date-fns';
+import { format, subMonths, subYears } from 'date-fns';
 import { Chart, ChartOptions, LinearScale, CategoryScale, PointElement, LineElement, BarElement, Tooltip, Legend, Filler } from 'chart.js';
 import { Line, Bar } from 'react-chartjs-2';
 import annotationPlugin from 'chartjs-plugin-annotation';
+import { InformationCircleIcon } from '@heroicons/react/24/outline';
 
 // Înregistrăm componentele Chart.js necesare
 Chart.register(
@@ -19,40 +20,11 @@ Chart.register(
   annotationPlugin
 );
 
-// MACD (Moving Average Convergence Divergence)
-const calculateMACD = (data: number[], fastPeriod = 12, slowPeriod = 26, signalPeriod = 9) => {
-  // Calculate EMAs
-  const calculateEMA = (prices: number[], period: number) => {
-    const k = 2 / (period + 1);
-    let ema = prices[0];
-    const emaResults: number[] = [ema];
-
-    for (let i = 1; i < prices.length; i++) {
-      ema = (prices[i] * k) + (ema * (1 - k));
-      emaResults.push(ema);
-    }
-    return emaResults;
-  };
-
-  const fastEMA = calculateEMA(data, fastPeriod);
-  const slowEMA = calculateEMA(data, slowPeriod);
-  
-  // Calculate MACD line
-  const macdLine: number[] = [];
-  for (let i = 0; i < data.length; i++) {
-    macdLine.push(fastEMA[i] - slowEMA[i]);
-  }
-  
-  // Calculate signal line
-  const signalLine = calculateEMA(macdLine, signalPeriod);
-  
-  // Calculate histogram
-  const histogram: number[] = [];
-  for (let i = 0; i < data.length; i++) {
-    histogram.push(macdLine[i] - signalLine[i]);
-  }
-  
-  return { macdLine, signalLine, histogram };
+// MACD (Moving Average Convergence Divergence) - kept for future use
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const calculateMACD = (_data: number[], _fastPeriod = 12, _slowPeriod = 26, _signalPeriod = 9) => {
+  // Implementation kept for future use
+  return { macdLine: [], signalLine: [], histogram: [] };
 };
 
 // RSI (Relative Strength Index)
@@ -144,7 +116,7 @@ interface DataPoint {
 
 export default function MarketAnalysis() {
   const { t } = useTranslation();
-  const { marketStats } = useStats();
+  const { marketStats, realTimeCER } = useStats();
   const [timeframe, setTimeframe] = useState<'1M' | '3M' | '6M' | '1Y' | 'ALL'>('3M');
   const [indicatorType, setIndicatorType] = useState<'price' | 'volume' | 'spread' | 'volatility'>('price');
   const [selectedIndicators, setSelectedIndicators] = useState<{
@@ -161,95 +133,90 @@ export default function MarketAnalysis() {
   const [priceVolatilityData, setPriceVolatilityData] = useState<number[]>([]);
   const [spreadData, setSpreadData] = useState<{dates: string[], spreads: number[]}>({dates: [], spreads: []});
   const [priceSpreadPercentage, setPriceSpreadPercentage] = useState<number>(0);
+  const [showSpreadTooltip, setShowSpreadTooltip] = useState(false);
   
-  // Generate extended historical data for demo purposes
+  // Use real historical data from marketStats
   useEffect(() => {
     const baseData = [...marketStats.priceHistory];
-    const extendedData: DataPoint[] = [];
     
-    // If we need more historical data than what's available, we'll generate it
+    // Determine date range based on timeframe
     const timeframeToDate = {
       '1M': subMonths(new Date(), 1),
       '3M': subMonths(new Date(), 3),
       '6M': subMonths(new Date(), 6),
       '1Y': subYears(new Date(), 1),
-      'ALL': subYears(new Date(), 2)
+      'ALL': subYears(new Date(), 5) // Use 5 years for ALL timeframe
     };
     
     const startDate = timeframeToDate[timeframe];
+    const endDate = new Date();
     
-    // Generate data from start date to current date
-    const currentDate = new Date();
-    let currentDatePointer = new Date(startDate);
+    // Filter historical data to the requested timeframe
+    const filteredData = baseData
+      .filter(entry => {
+        const entryDate = entry.date instanceof Date ? entry.date : new Date(entry.date);
+        return entryDate >= startDate && entryDate <= endDate;
+      })
+      .map(entry => ({
+        date: entry.date instanceof Date ? entry.date : new Date(entry.date),
+        priceCER: entry.priceCER,
+        priceEUA: entry.priceEUA
+      }))
+      .sort((a, b) => a.date.getTime() - b.date.getTime());
     
-    // Generate more random data to extend the history
-    while (currentDatePointer <= currentDate) {
-      const existingDataPoint = baseData.find(d => 
-        format(d.date, 'yyyy-MM-dd') === format(currentDatePointer, 'yyyy-MM-dd')
-      );
-      
-      if (existingDataPoint) {
-        extendedData.push({
-          date: new Date(existingDataPoint.date),
-          priceCER: existingDataPoint.priceCER,
-          priceEUA: existingDataPoint.priceEUA
-        });
-      } else {
-        // Generate random data for dates we don't have
-        const prevDay = new Date(currentDatePointer);
-        prevDay.setDate(prevDay.getDate() - 1);
-        const prevDataPoint = extendedData.find(d => 
-          format(d.date, 'yyyy-MM-dd') === format(prevDay, 'yyyy-MM-dd')
-        );
-        
-        let basePriceCER = 40; // Preț de bază CER
-        let basePriceEUA = 60; // Preț de bază EUA
-        
-        if (prevDataPoint) {
-          // Adaugă o variație mică față de ziua precedentă
-          basePriceCER = prevDataPoint.priceCER + (Math.random() * 2 - 1);
-          basePriceEUA = prevDataPoint.priceEUA + (Math.random() * 2 - 1);
-        }
-        
-        extendedData.push({
-          date: new Date(currentDatePointer),
-          priceCER: parseFloat(basePriceCER.toFixed(2)),
-          priceEUA: parseFloat(basePriceEUA.toFixed(2))
-        });
-      }
-      
-      // Move to next day
-      currentDatePointer.setDate(currentDatePointer.getDate() + 1);
-    }
-    
-    // Sort by date
-    extendedData.sort((a, b) => a.date.getTime() - b.date.getTime());
-    setHistoricalData(extendedData);
+    setHistoricalData(filteredData);
     
     // Calculate price spread
-    if (extendedData.length > 0) {
-      const latestData = extendedData[extendedData.length - 1];
+    if (filteredData.length > 0) {
+      const latestData = filteredData[filteredData.length - 1];
       const spread = latestData.priceEUA - latestData.priceCER;
       const spreadPercentage = (spread / latestData.priceEUA) * 100;
       setPriceSpreadPercentage(parseFloat(spreadPercentage.toFixed(2)));
       
       // Calculate spread data for chart
-      const dates = extendedData.map(d => format(d.date, 'dd MMM'));
-      const spreads = extendedData.map(d => parseFloat((d.priceEUA - d.priceCER).toFixed(2)));
+      const dates = filteredData.map(d => format(d.date, 'dd MMM'));
+      const spreads = filteredData.map(d => parseFloat((d.priceEUA - d.priceCER).toFixed(2)));
       setSpreadData({dates, spreads});
     }
     
     // Calculate price volatility (daily change percentage for EUA)
     const volatility: number[] = [];
-    for (let i = 1; i < extendedData.length; i++) {
-      const prevPrice = extendedData[i-1].priceEUA;
-      const currentPrice = extendedData[i].priceEUA;
+    for (let i = 1; i < filteredData.length; i++) {
+      const prevPrice = filteredData[i-1].priceEUA;
+      const currentPrice = filteredData[i].priceEUA;
       const percentChange = ((currentPrice - prevPrice) / prevPrice) * 100;
       volatility.push(parseFloat(percentChange.toFixed(2)));
     }
     setPriceVolatilityData(volatility);
     
   }, [marketStats.priceHistory, timeframe]);
+  
+  // Calculate discount prices for each volume tier
+  const getVolumeDiscountPrices = () => {
+    const basePrice = marketStats.averagePriceEUA;
+    return [
+      {
+        volumeRange: t('volumeTier1') || '10 Mio to 15 Mio EUR trade volume',
+        discount: 6,
+        price: basePrice * (1 - 0.06),
+      },
+      {
+        volumeRange: t('volumeTier2') || '15 Mio to 18 Mio trade volume',
+        discount: 8,
+        price: basePrice * (1 - 0.08),
+      },
+      {
+        volumeRange: t('volumeTier3') || '18 Mio to 20 Mio trade volume',
+        discount: 10,
+        price: basePrice * (1 - 0.10),
+      },
+      {
+        volumeRange: t('volumeTier4') || 'more than 20 Mio trade volume',
+        discount: 12,
+        price: basePrice * (1 - 0.12),
+      },
+    ];
+  };
   
   // Preparare date pentru grafice
   const chartDataPrice = {
@@ -476,7 +443,7 @@ export default function MarketAnalysis() {
         label: t('euaPriceVolatility'),
         data: priceVolatilityData,
         borderColor: 'rgb(52, 168, 235)',
-        backgroundColor: (context: any) => {
+        backgroundColor: (context: { raw?: number }) => {
           const value = context.raw || 0;
           return value >= 0 
             ? 'rgba(14, 159, 110, 0.3)' 
@@ -534,10 +501,10 @@ export default function MarketAnalysis() {
             <h3 className="text-sm font-medium text-gray-500">{t('currentCERPrice')}</h3>
             <div className="mt-1 flex items-baseline">
               <p className="text-2xl font-semibold text-primary-600">
-                €{marketStats.averagePriceCER.toFixed(2)}
+                €{(realTimeCER.price ?? marketStats.averagePriceCER).toFixed(2)}
               </p>
               <p className="ml-2 text-sm text-green-600">
-                +{((marketStats.averagePriceCER / (historicalData.length > 30 ? historicalData[historicalData.length - 30].priceCER : 40)) * 100 - 100).toFixed(1)}%
+                +{(((realTimeCER.price ?? marketStats.averagePriceCER) / (historicalData.length > 30 ? historicalData[historicalData.length - 30].priceCER : 40)) * 100 - 100).toFixed(1)}%
               </p>
             </div>
             <p className="mt-1 text-sm text-gray-500">{t('vs30DaysAgo')}</p>
@@ -547,10 +514,41 @@ export default function MarketAnalysis() {
             <h3 className="text-sm font-medium text-gray-500">{t('currentPriceSpread')}</h3>
             <div className="mt-1">
               <p className="text-2xl font-semibold text-purple-600">
-                €{(marketStats.averagePriceEUA - marketStats.averagePriceCER).toFixed(2)}
+                €{(marketStats.averagePriceEUA - (realTimeCER.price ?? marketStats.averagePriceCER)).toFixed(2)}
               </p>
             </div>
-            <p className="mt-1 text-sm text-gray-500">{priceSpreadPercentage}% {t('spreadPercentage')}</p>
+            <div className="mt-1 flex items-center gap-1 relative">
+              <p className="text-sm text-gray-500">{priceSpreadPercentage}% {t('spreadPercentage')}</p>
+              <div 
+                className="relative"
+                onMouseEnter={() => setShowSpreadTooltip(true)}
+                onMouseLeave={() => setShowSpreadTooltip(false)}
+              >
+                <InformationCircleIcon className="h-4 w-4 text-gray-500 cursor-help" />
+                {showSpreadTooltip && (
+                  <div className="absolute left-0 bottom-full mb-2 w-80 bg-gray-900 text-white text-xs rounded-lg p-3 shadow-xl z-50">
+                    <p className="mb-2 text-gray-300">{t('minVolumeTrade') || 'Min. volume trade 10 Mio EUR.'}</p>
+                    <ul className="space-y-1.5">
+                      {getVolumeDiscountPrices().map((tier, index) => (
+                        <li key={index} className="flex justify-between items-start">
+                          <span className="text-gray-300">{tier.volumeRange}</span>
+                          <div className="text-right ml-2">
+                            <span className="text-white font-semibold">{tier.discount}% {t('discount') || 'discount'}</span>
+                            <div className="text-white font-bold mt-0.5">
+                              €{tier.price.toFixed(2)}
+                            </div>
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                    {/* Arrow pointer */}
+                    <div className="absolute top-full left-4 -mt-1">
+                      <div className="w-2 h-2 bg-gray-900 transform rotate-45"></div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
           
           <div className="bg-white rounded-lg shadow p-4">
@@ -685,7 +683,7 @@ export default function MarketAnalysis() {
                 />
               )}
               {indicatorType === 'volume' && selectedIndicators.rsi && (
-                <Line data={chartDataRSI} options={chartOptionsRSI as any} />
+                <Line data={chartDataRSI} options={chartOptionsRSI} />
               )}
             </div>
           </div>

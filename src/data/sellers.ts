@@ -1,4 +1,4 @@
-import { v4 as uuidv4 } from 'uuid';
+// uuidv4 is used via inline calls where needed
 
 // Lista entităților reale din piața de certificate de carbon
 export interface Seller {

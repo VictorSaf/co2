@@ -31,7 +31,7 @@ export default function Login() {
       } else {
         setError(t('invalidCredentials'));
       }
-    } catch (err) {
+    } catch {
       setError(t('error'));
     } finally {
       setIsLoading(false);

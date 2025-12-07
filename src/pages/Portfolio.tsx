@@ -53,19 +53,11 @@ export default function Portfolio() {
       } else {
         setActionStatus('error');
       }
-    } catch (error) {
+    } catch {
       setActionStatus('error');
     }
   };
   
-  // Structura pentru a stoca atât procentajul cât și timpul rămas pentru fiecare certificat
-  type ProgressInfo = {
-    percent: number;
-    timeRemaining: {
-      minutes: number;
-      seconds: number;
-    };
-  };
 
   // Update progress timers for converting certificates
   useEffect(() => {
@@ -73,7 +65,7 @@ export default function Portfolio() {
     
     if (convertingCertificates.length > 0) {
       const interval = setInterval(() => {
-        setProgressTimers(prev => {
+        setProgressTimers(() => {
           const newTimers: Record<string, number> = {};
           
           convertingCertificates.forEach(cert => {
@@ -83,7 +75,6 @@ export default function Portfolio() {
             const currentTime = new Date().getTime();
             const elapsedSeconds = Math.floor((currentTime - startTime) / 1000);
             const totalSeconds = 5 * 60; // 5 minutes in seconds
-            const remainingSeconds = Math.max(0, totalSeconds - elapsedSeconds);
             
             // Calculate progress percentage (0-100)
             const progress = Math.min(100, Math.floor((elapsedSeconds / totalSeconds) * 100));

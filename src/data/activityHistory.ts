@@ -69,7 +69,7 @@ export const initializeActivityHistory = (): void => {
   if (storedHistory) {
     const parsedHistory = JSON.parse(storedHistory);
     // Convertire string-uri de dată în obiecte Date
-    activityHistory = parsedHistory.map((activity: any) => ({
+    activityHistory = parsedHistory.map((activity: { id: string; type: string; description: string; timestamp: string | Date; amount?: number; price?: number }) => ({
       ...activity,
       timestamp: new Date(activity.timestamp)
     }));

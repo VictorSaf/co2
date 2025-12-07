@@ -392,5 +392,24 @@ export default {
   "you": "Tu",
   "thirdParty": "Participant la piață",
   "anonymizedActivity": "Un participant la piață a efectuat o operație de {type}",
-  "approximately": "Aprox."
+  "approximately": "Aprox.",
+  
+  // Live Price Ticker
+  "liveEUAPrice": "Preț Live EU ETS",
+  "liveCERPrice": "Preț Live CER Chinezesc",
+  "livePrices": "Prețuri Live",
+  "conversionPrice": "Preț Conversie",
+  "discountRange": "Reducere 6-12%",
+  "dependingOnVolume": "în funcție de volum",
+  "volumeDiscountInfo": "Reducerile în funcție de volum",
+  "minVolumeTrade": "Volum minim tranzacție 10 Mio EUR.",
+  "volumeTier1": "10 Mio până la 15 Mio EUR volum tranzacție",
+  "volumeTier2": "15 Mio până la 18 Mio volum tranzacție",
+  "volumeTier3": "18 Mio până la 20 Mio volum tranzacție",
+  "volumeTier4": "mai mult de 20 Mio volum tranzacție",
+  "discount": "reducere",
+  "live": "LIVE",
+  "updating": "Se actualizează...",
+  "refresh": "Reîmprospătare",
+  "usingMarketData": "Se folosesc date de piață ca rezervă"
 };
