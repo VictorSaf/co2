@@ -1,0 +1,278 @@
+/**
+ * Component Styles
+ * 
+ * Reusable component classes using Tailwind's component layer.
+ * These classes can be used directly in components or extended.
+ */
+
+@tailwind components;
+
+@layer components {
+  /* Button */
+  .btn {
+    @apply inline-flex items-center justify-center rounded-md font-medium transition-colors;
+    @apply focus:outline-none focus:ring-2 focus:ring-offset-2;
+    @apply disabled:opacity-50 disabled:pointer-events-none;
+  }
+  
+  .btn-primary {
+    @apply bg-primary-600 text-white hover:bg-primary-700 focus:ring-primary-500;
+  }
+  
+  .btn-secondary {
+    @apply bg-secondary-600 text-white hover:bg-secondary-700 focus:ring-secondary-500;
+  }
+  
+  .btn-outline {
+    @apply border-2 border-primary-600 text-primary-600 hover:bg-primary-50 dark:hover:bg-primary-900/20;
+  }
+  
+  .btn-ghost {
+    @apply text-primary-600 hover:bg-primary-50 dark:hover:bg-primary-900/20;
+  }
+  
+  .btn-danger {
+    @apply bg-semantic-error text-white hover:bg-semantic-error-dark focus:ring-semantic-error-light;
+  }
+  
+  .btn-success {
+    @apply bg-semantic-success text-white hover:bg-semantic-success-dark focus:ring-semantic-success-light;
+  }
+  
+  .btn-info {
+    @apply bg-semantic-info text-white hover:bg-semantic-info-dark focus:ring-semantic-info-light;
+  }
+  
+  /* Input */
+  .input-base {
+    @apply block w-full rounded-md border;
+    @apply bg-background dark:bg-neutral-800 text-text-primary dark:text-text-primary-dark;
+    @apply border-border dark:border-neutral-600;
+    @apply focus:border-primary-500 dark:focus:border-primary-400 focus:ring-primary-500 dark:focus:ring-primary-400;
+    @apply disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+  
+  .input-wrapper {
+    @apply mb-4;
+  }
+  
+  .input-label {
+    @apply block text-sm font-medium text-text-primary dark:text-text-primary-dark mb-1;
+  }
+  
+  .input-container {
+    @apply relative;
+  }
+  
+  .input-icon-left {
+    @apply absolute left-3 top-1/2 transform -translate-y-1/2 text-text-secondary dark:text-text-secondary-dark;
+  }
+  
+  .input-icon-right {
+    @apply absolute right-3 top-1/2 transform -translate-y-1/2 text-text-secondary dark:text-text-secondary-dark;
+  }
+  
+  .input-error {
+    @apply border-semantic-error dark:border-semantic-error-light focus:border-semantic-error dark:focus:border-semantic-error-light focus:ring-semantic-error dark:focus:ring-semantic-error-light;
+  }
+  
+  .input-error-text {
+    @apply block text-sm text-semantic-error dark:text-semantic-error-light mt-1;
+  }
+  
+  .input-helper-text {
+    @apply block text-sm text-text-secondary dark:text-text-secondary-dark mt-1;
+  }
+  
+  /* Card */
+  .card-base {
+    @apply bg-background dark:bg-background-dark rounded-lg shadow-md;
+    @apply dark:shadow-gray-900/50;
+  }
+  
+  .card-default {
+    @apply border border-border dark:border-border-dark;
+  }
+  
+  .card-elevated {
+    @apply shadow-lg;
+  }
+  
+  .card-outlined {
+    @apply border-2 border-border dark:border-border-dark;
+  }
+  
+  .card-padding-sm { @apply p-4; }
+  .card-padding-md { @apply p-6; }
+  .card-padding-lg { @apply p-8; }
+  
+  .card-hover {
+    @apply transition-shadow hover:shadow-lg;
+  }
+  
+  /* Badge */
+  .badge-base {
+    @apply inline-flex items-center rounded-full font-medium;
+  }
+  
+  .badge-primary {
+    @apply bg-primary-100 text-primary-800 dark:bg-primary-900 dark:text-primary-200;
+  }
+  
+  .badge-secondary {
+    @apply bg-secondary-100 text-secondary-800 dark:bg-secondary-900 dark:text-secondary-200;
+  }
+  
+  .badge-success {
+    @apply bg-semantic-success-light/20 text-semantic-success-dark dark:bg-semantic-success-dark/30 dark:text-semantic-success-light;
+  }
+  
+  .badge-error {
+    @apply bg-semantic-error-light/20 text-semantic-error-dark dark:bg-semantic-error-dark/30 dark:text-semantic-error-light;
+  }
+  
+  .badge-warning {
+    @apply bg-semantic-warning-light/20 text-semantic-warning-dark dark:bg-semantic-warning-dark/30 dark:text-semantic-warning-light;
+  }
+  
+  .badge-info {
+    @apply bg-semantic-info-light/20 text-semantic-info-dark dark:bg-semantic-info-dark/30 dark:text-semantic-info-light;
+  }
+  
+  .badge-sm { @apply px-2 py-0.5 text-xs; }
+  .badge-md { @apply px-2.5 py-0.5 text-sm; }
+  .badge-lg { @apply px-3 py-1 text-base; }
+  
+  .badge-dot {
+    @apply w-2 h-2 rounded-full mr-1;
+  }
+  
+  /* Modal */
+  .modal-backdrop {
+    @apply fixed inset-0 bg-black/50 backdrop-blur-sm;
+    z-index: 1040;
+  }
+  
+  .modal-container {
+    @apply fixed inset-0 flex items-center justify-center p-4;
+    z-index: 1050;
+  }
+  
+  .modal-content {
+    @apply bg-background dark:bg-background-dark rounded-lg shadow-xl max-w-full max-h-[90vh] overflow-auto;
+  }
+  
+  .modal-sm { @apply max-w-sm; }
+  .modal-md { @apply max-w-md; }
+  .modal-lg { @apply max-w-lg; }
+  .modal-xl { @apply max-w-xl; }
+  .modal-full { @apply max-w-full; }
+  
+  .modal-title {
+    @apply text-xl font-semibold text-text-primary dark:text-text-primary-dark mb-4;
+  }
+  
+  /* Tooltip */
+  .tooltip-wrapper {
+    @apply relative inline-block;
+  }
+  
+  .tooltip-icon {
+    @apply h-4 w-4 cursor-help focus:outline-none focus:ring-2 focus:ring-secondary-500 rounded;
+  }
+  
+  .tooltip-content {
+    @apply absolute opacity-0 pointer-events-none transition-opacity duration-200;
+    @apply px-3 py-2 rounded text-label uppercase tracking-wider;
+    z-index: 1070;
+  }
+  
+  .tooltip-top {
+    @apply left-1/2 transform -translate-x-1/2 bottom-full mb-2;
+  }
+  
+  .tooltip-bottom {
+    @apply left-1/2 transform -translate-x-1/2 top-full mt-2;
+  }
+  
+  .tooltip-left {
+    @apply right-full mr-2 top-1/2 transform -translate-y-1/2;
+  }
+  
+  .tooltip-right {
+    @apply left-full ml-2 top-1/2 transform -translate-y-1/2;
+  }
+  
+  .tooltip-default {
+    @apply bg-background-secondary dark:bg-neutral-900 border border-border dark:border-border-dark text-text-primary dark:text-text-primary-dark;
+  }
+  
+  .tooltip-dark {
+    @apply bg-neutral-900 dark:bg-neutral-950 border border-neutral-700 dark:border-neutral-800 text-text-primary-dark dark:text-neutral-200;
+  }
+  
+  /* Table */
+  .table-wrapper {
+    @apply overflow-x-auto;
+  }
+  
+  .table-base {
+    @apply w-full border-collapse;
+  }
+  
+  .table-striped tbody tr:nth-child(even) {
+    @apply bg-background-secondary dark:bg-neutral-900/50;
+  }
+  
+  .table-hover tbody tr:hover {
+    @apply bg-background-secondary dark:bg-neutral-900/50;
+  }
+  
+  .table-compact th,
+  .table-compact td {
+    @apply px-2 py-1;
+  }
+  
+  .table-head {
+    @apply bg-background-secondary dark:bg-neutral-900;
+  }
+  
+  .table-body {
+    @apply bg-background dark:bg-background-dark;
+  }
+  
+  .table-row {
+    @apply border-b border-border dark:border-border-dark;
+  }
+  
+  .table-header {
+    @apply px-4 py-3 text-left text-sm font-semibold text-text-secondary dark:text-text-secondary-dark uppercase tracking-wider;
+    @apply border-b border-border dark:border-border-dark;
+  }
+  
+  .table-cell {
+    @apply px-4 py-3 text-sm text-text-primary dark:text-text-primary-dark border-b border-border dark:border-border-dark;
+  }
+  
+  /* Form */
+  .form-field {
+    @apply mb-4;
+  }
+  
+  .form-label {
+    @apply block text-sm font-medium text-text-primary dark:text-text-primary-dark mb-1;
+  }
+  
+  .form-required {
+    @apply text-semantic-error dark:text-semantic-error-light ml-1;
+  }
+  
+  .form-error {
+    @apply block text-sm text-semantic-error dark:text-semantic-error-light mt-1;
+  }
+  
+  .form-helper {
+    @apply block text-sm text-text-secondary dark:text-text-secondary-dark mt-1;
+  }
+}
+

@@ -1,0 +1,184 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://co2-trading-platform.com/design-system-theme.schema.json",
+  "title": "CO2 Trading Platform Design System Theme",
+  "description": "JSON Schema for design system theme tokens",
+  "type": "object",
+  "required": ["colors", "typography", "spacing", "shadows", "borders", "transitions", "breakpoints", "zIndex", "themes"],
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "name": {
+      "type": "string"
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$"
+    },
+    "description": {
+      "type": "string"
+    },
+    "colors": {
+      "type": "object",
+      "required": ["primary", "secondary", "semantic", "neutral", "functional"],
+      "properties": {
+        "primary": {
+          "type": "object",
+          "patternProperties": {
+            "^[0-9]+$": {
+              "type": "string",
+              "pattern": "^#[0-9a-fA-F]{6}$"
+            }
+          }
+        },
+        "secondary": {
+          "type": "object",
+          "patternProperties": {
+            "^[0-9]+$": {
+              "type": "string",
+              "pattern": "^#[0-9a-fA-F]{6}$"
+            }
+          }
+        },
+        "semantic": {
+          "type": "object",
+          "required": ["success", "error", "warning", "info"],
+          "properties": {
+            "success": {
+              "type": "object",
+              "required": ["light", "DEFAULT", "dark"],
+              "properties": {
+                "light": { "type": "string" },
+                "DEFAULT": { "type": "string" },
+                "dark": { "type": "string" }
+              }
+            },
+            "error": {
+              "type": "object",
+              "required": ["light", "DEFAULT", "dark"],
+              "properties": {
+                "light": { "type": "string" },
+                "DEFAULT": { "type": "string" },
+                "dark": { "type": "string" }
+              }
+            },
+            "warning": {
+              "type": "object",
+              "required": ["light", "DEFAULT", "dark"],
+              "properties": {
+                "light": { "type": "string" },
+                "DEFAULT": { "type": "string" },
+                "dark": { "type": "string" }
+              }
+            },
+            "info": {
+              "type": "object",
+              "required": ["light", "DEFAULT", "dark"],
+              "properties": {
+                "light": { "type": "string" },
+                "DEFAULT": { "type": "string" },
+                "dark": { "type": "string" }
+              }
+            }
+          }
+        },
+        "neutral": {
+          "type": "object",
+          "patternProperties": {
+            "^[0-9]+$": {
+              "type": "string",
+              "pattern": "^#[0-9a-fA-F]{6}$"
+            }
+          }
+        },
+        "functional": {
+          "type": "object",
+          "required": ["background", "text", "border"],
+          "properties": {
+            "background": {
+              "type": "object",
+              "required": ["light", "dark", "darker"],
+              "properties": {
+                "light": { "type": "string" },
+                "dark": { "type": "string" },
+                "darker": { "type": "string" }
+              }
+            },
+            "text": {
+              "type": "object",
+              "required": ["primary", "secondary", "muted"],
+              "properties": {
+                "primary": {
+                  "type": "object",
+                  "required": ["light", "dark"],
+                  "properties": {
+                    "light": { "type": "string" },
+                    "dark": { "type": "string" }
+                  }
+                },
+                "secondary": {
+                  "type": "object",
+                  "required": ["light", "dark"],
+                  "properties": {
+                    "light": { "type": "string" },
+                    "dark": { "type": "string" }
+                  }
+                },
+                "muted": {
+                  "type": "object",
+                  "required": ["light", "dark"],
+                  "properties": {
+                    "light": { "type": "string" },
+                    "dark": { "type": "string" }
+                  }
+                }
+              }
+            },
+            "border": {
+              "type": "object",
+              "required": ["light", "dark"],
+              "properties": {
+                "light": { "type": "string" },
+                "dark": { "type": "string" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "typography": {
+      "type": "object",
+      "required": ["fontFamily", "fontSize", "fontWeight", "textStyle"]
+    },
+    "spacing": {
+      "type": "object",
+      "required": ["scale", "semantic", "component"]
+    },
+    "shadows": {
+      "type": "object",
+      "required": ["standard", "dark", "colored"]
+    },
+    "borders": {
+      "type": "object",
+      "required": ["radius", "width", "style", "color"]
+    },
+    "transitions": {
+      "type": "object",
+      "required": ["duration", "timing", "preset"]
+    },
+    "breakpoints": {
+      "type": "object",
+      "required": ["mobile", "sm", "md", "lg", "xl", "2xl"]
+    },
+    "zIndex": {
+      "type": "object",
+      "required": ["scale", "semantic"]
+    },
+    "themes": {
+      "type": "object",
+      "required": ["light", "dark"]
+    }
+  }
+}
+

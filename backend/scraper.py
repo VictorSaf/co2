@@ -1,6 +1,23 @@
 """
 ICE (Intercontinental Exchange) EU ETS Price Scraper
 Scrapes real-time EU ETS (EUA) carbon allowance prices from multiple sources
+
+Features:
+- Multiple data source fallback chain (API sources prioritized over web scraping)
+- Retry logic with exponential backoff for API calls
+- Rate limiting awareness for API providers
+- Comprehensive error handling and logging
+- Automatic fallback to cached prices if all sources fail
+
+API Sources (optional, require API keys):
+- Alpha Vantage API (if ALPHAVANTAGE_API_KEY provided, free tier: 500 calls/day)
+
+Web Scraping Sources (fallback):
+- ICE (Intercontinental Exchange)
+- TradingView
+- Investing.com
+- MarketWatch
+- ICE public pages
 """
 
 import requests
@@ -11,6 +28,7 @@ from typing import Optional, Dict
 import logging
 import time
 import json
+import os
 
 logger = logging.getLogger(__name__)
 
@@ -32,15 +50,78 @@ class ICEScraper:
         self.last_timestamp = None
         self.price_history = []
     
+    def _retry_request(self, func, max_retries=3, delay=1, backoff=2):
+        """
+        Retry helper for API calls with exponential backoff.
+        
+        Args:
+            func: Function to retry (should return a value or raise an exception)
+            max_retries: Maximum number of retry attempts
+            delay: Initial delay in seconds
+            backoff: Multiplier for delay after each retry
+            
+        Returns:
+            Result of func() if successful, None if all retries fail
+        """
+        for attempt in range(max_retries):
+            try:
+                return func()
+            except (requests.exceptions.RequestException, requests.exceptions.Timeout) as e:
+                if attempt == max_retries - 1:
+                    logger.debug(f"Request failed after {max_retries} attempts: {e}")
+                    return None
+                wait_time = delay * (backoff ** attempt)
+                logger.debug(f"Request failed (attempt {attempt + 1}/{max_retries}), retrying in {wait_time}s: {e}")
+                time.sleep(wait_time)
+            except Exception as e:
+                logger.debug(f"Unexpected error in retry: {e}")
+                return None
+        return None
+    
     def scrape_ice_price(self) -> Optional[Dict]:
         """
-        Scrape EU ETS price from multiple sources
-        Returns dict with price, timestamp, currency, and change24h
+        Scrape EU ETS price from multiple sources.
+        
+        Tries multiple data sources in order of preference until one succeeds.
+        Each source is mapped to a human-readable name for tracking purposes.
+        If all sources fail, returns cached price if available.
+        
+        Returns:
+            Dictionary with:
+                - price: EUA price in EUR
+                - timestamp: datetime object (timezone-aware UTC)
+                - currency: "EUR"
+                - change24h: 24-hour price change percentage (optional)
+                - source: Human-readable source name (e.g., "ICE (Intercontinental Exchange)")
+            None if all sources fail and no cached price available
+        
+        Source Priority Order:
+            1. ICE (Intercontinental Exchange) - spot price
+            2. Alpha Vantage API (if API key provided)
+            3. TradingView (web scraping)
+            4. Investing.com
+            5. MarketWatch
+            6. ICE public pages
+        
+        Fallback:
+            If all sources fail, returns cached price with source="Cached"
         """
-        # Try multiple sources in order of preference (prioritizing spot price sources)
+        # Map each source function to a human-readable source name
+        source_map = {
+            self._fetch_from_ice_spot: "ICE (Intercontinental Exchange)",
+            self._fetch_from_carboncredits: "CarbonCredits.com",
+            self._fetch_from_alphavantage: "Alpha Vantage API",
+            self._fetch_from_tradingview: "TradingView",
+            self._fetch_from_investing: "Investing.com",
+            self._fetch_from_marketwatch: "MarketWatch",
+            self._fetch_from_ice_public: "ICE public pages",
+        }
+        
+        # Try multiple sources in order of preference (prioritizing API sources, then web scraping)
         sources = [
             self._fetch_from_ice_spot,
-            self._fetch_from_free_api,
+            self._fetch_from_carboncredits,
+            self._fetch_from_alphavantage,
             self._fetch_from_tradingview,
             self._fetch_from_investing,
             self._fetch_from_marketwatch,
@@ -51,13 +132,15 @@ class ICEScraper:
             try:
                 price_data = source_func()
                 if price_data and price_data.get('price'):
+                    # Add source information
+                    price_data['source'] = source_map.get(source_func, 'Unknown')
                     self.last_price = price_data['price']
                     self.last_timestamp = price_data['timestamp']
                     self.price_history.append(price_data['price'])
                     # Keep only last 100 prices for 24h change calculation
                     if len(self.price_history) > 100:
                         self.price_history.pop(0)
-                    logger.info(f"Successfully fetched price: €{price_data['price']}")
+                    logger.info(f"Successfully fetched price: €{price_data['price']} from {price_data['source']}")
                     return price_data
             except Exception as e:
                 logger.debug(f"Source {source_func.__name__} failed: {e}")
@@ -70,74 +153,105 @@ class ICEScraper:
                 'price': self.last_price,
                 'timestamp': self.last_timestamp or datetime.now(timezone.utc),
                 'currency': 'EUR',
-                'change24h': self._calculate_24h_change()
+                'change24h': self._calculate_24h_change(),
+                'source': 'Cached'
             }
         
         return None
     
-    def _fetch_from_free_api(self) -> Optional[Dict]:
-        """Fetch EU ETS SPOT price - uses realistic market simulation based on ICE spot patterns"""
+    def _fetch_from_alphavantage(self) -> Optional[Dict]:
+        """
+        Fetch EU ETS price from Alpha Vantage API (requires API key).
+        
+        Note: Alpha Vantage may not have EU ETS carbon market data.
+        This method attempts to fetch if available, otherwise gracefully skips.
+        Free tier: 500 API calls per day.
+        """
+        api_key = os.getenv('ALPHAVANTAGE_API_KEY')
+        if not api_key:
+            return None  # Skip if no API key
+        
+        def _fetch():
+            # Try multiple possible symbols for EU ETS
+            # Note: Alpha Vantage may not have EU ETS data - this is experimental
+            symbols = ['EUA', 'EUA1', 'EUA.XFRA']  # Try different symbol formats
+            
+            for symbol in symbols:
+                url = "https://www.alphavantage.co/query"
+                params = {
+                    'function': 'GLOBAL_QUOTE',
+                    'symbol': symbol,
+                    'apikey': api_key
+                }
+                
+                response = self.session.get(url, params=params, timeout=10)
+                response.raise_for_status()
+                
+                data = response.json()
+                
+                # Check for rate limit (Alpha Vantage free tier: 5 calls/minute, 500/day)
+                if 'Note' in data:
+                    note = data['Note']
+                    if 'API call frequency' in note or 'Thank you for using Alpha Vantage' in note:
+                        logger.debug(f"Alpha Vantage rate limit: {note}")
+                        return None  # Rate limited, don't retry immediately
+                
+                # Check for API errors
+                if 'Error Message' in data:
+                    error_msg = data['Error Message']
+                    logger.debug(f"Alpha Vantage API error for {symbol}: {error_msg}")
+                    continue  # Try next symbol
+                
+                # Parse Global Quote response
+                quote = data.get('Global Quote', {})
+                if not quote:
+                    continue  # No data for this symbol, try next
+                
+                price_str = quote.get('05. price') or quote.get('price')
+                
+                if price_str:
+                    try:
+                        price = float(price_str)
+                        # Validate price range (EU ETS historically 5-150 EUR, current range typically 50-100)
+                        # Expanded range to handle historical variations and future price movements
+                        if 5 <= price <= 150:
+                            change_pct_str = quote.get('10. change percent') or quote.get('change_percent', '0%')
+                            
+                            # Parse change percentage
+                            change24h = None
+                            if change_pct_str and change_pct_str != '0%':
+                                try:
+                                    change24h = float(change_pct_str.rstrip('%'))
+                                except ValueError:
+                                    pass
+                            
+                            logger.info(f"Fetched price from Alpha Vantage API ({symbol}): €{price:.2f}")
+                            return {
+                                'price': round(price, 2),
+                                'timestamp': datetime.now(timezone.utc),
+                                'currency': 'EUR',
+                                'change24h': change24h
+                            }
+                        else:
+                            logger.debug(f"Price {price} outside expected range for EU ETS")
+                    except ValueError as e:
+                        logger.debug(f"Invalid price format from Alpha Vantage: {price_str}, error: {e}")
+            
+            # No valid data found for any symbol
+            logger.debug("Alpha Vantage: No EU ETS data found for any symbol")
+            return None
+        
         try:
-            import random
-            import math
-            
-            # Base SPOT price around current ICE EU ETS spot market levels (Nov 2025: ~79-80 EUR)
-            # Spot prices are typically close to but may differ slightly from futures prices
-            base_price = 79.5
-            
-            # Use time-based seed for consistent but varying prices throughout the day
-            current_time = datetime.now(timezone.utc)
-            time_seed = current_time.hour * 60 + current_time.minute
-            
-            # Simulate intraday price movements (market is more volatile during trading hours)
-            # EU ETS trades actively during European hours (8:00-17:00 CET)
-            hour = current_time.hour
-            is_trading_hours = 7 <= hour <= 16  # 8:00-17:00 CET (UTC+1)
-            
-            # Volatility is higher during trading hours
-            volatility = 1.5 if is_trading_hours else 0.8
-            
-            # Add realistic price movement based on time and random walk
-            # Use sine wave to simulate daily price patterns (higher in morning, lower in afternoon)
-            daily_pattern = math.sin((hour - 8) * math.pi / 8) * 0.5 if is_trading_hours else 0
-            
-            # Random walk component (simulates market noise)
-            random.seed(time_seed % 1000)  # Use time-based seed for reproducibility
-            random_walk = random.uniform(-volatility, volatility)
-            
-            # Calculate current price
-            current_price = base_price + daily_pattern + random_walk
-            
-            # Ensure price stays in realistic ICE EU ETS SPOT range (70-85 EUR typical in Nov 2025)
-            # Spot prices are typically within 1-2 EUR of nearby futures contracts
-            current_price = max(70.0, min(85.0, current_price))
-            
-            # Calculate 24h change based on price history or simulate realistic change
-            if len(self.price_history) > 0:
-                old_price = self.price_history[0] if len(self.price_history) < 24 else self.price_history[-24]
-                if old_price > 0:
-                    change24h = ((current_price - old_price) / old_price) * 100
-                else:
-                    change24h = random.uniform(-2.5, 2.5)  # Typical daily movement
-            else:
-                # Simulate realistic 24h change (EU ETS typically moves ±2-3% per day)
-                change24h = random.uniform(-2.8, 2.8)
-            
-            logger.info(f"Generated realistic ICE market price: €{current_price:.2f} (24h: {change24h:.2f}%)")
-            
-            return {
-                'price': round(current_price, 2),
-                'timestamp': current_time,
-                'currency': 'EUR',
-                'change24h': round(change24h, 2)
-            }
+            result = self._retry_request(_fetch, max_retries=2, delay=1)
+            return result
         except Exception as e:
-            logger.debug(f"Price generation failed: {e}")
+            logger.debug(f"Alpha Vantage API fetch failed: {e}")
+        
         return None
     
     def _fetch_from_ice_spot(self) -> Optional[Dict]:
         """Fetch EU ETS spot price from ICE Endex spot market data"""
-        try:
+        def _fetch():
             # ICE Endex spot price endpoints (attempting to find spot price data)
             urls = [
                 'https://www.theice.com/products/35496611/EUA-Futures',  # May have spot reference
@@ -180,9 +294,140 @@ class ICEScraper:
                 except Exception as e:
                     logger.debug(f"ICE spot fetch from {url} failed: {e}")
                     continue
+            return None
+        
+        try:
+            result = self._retry_request(_fetch, max_retries=2, delay=1)
+            return result
         except Exception as e:
             logger.debug(f"ICE spot fetch failed: {e}")
         return None
+    
+    def _fetch_from_carboncredits(self) -> Optional[Dict]:
+        """
+        Fetch EU ETS price from CarbonCredits.com
+        
+        Price Validation:
+        - Uses range 50-100 EUR (wider than other sources) to accommodate historical
+          price variations and future market movements
+        - Other sources use 70-85 EUR for current spot prices (Nov 2025 typical range)
+        - CarbonCredits.com may display historical or forecasted prices, hence wider range
+        """
+        try:
+            url = "https://carboncredits.com/carbon-prices-today/"
+            response = self.session.get(url, timeout=10)
+            response.raise_for_status()
+            
+            soup = BeautifulSoup(response.text, 'html.parser')
+            
+            # Look for EUA price in the page
+            # CarbonCredits.com typically displays prices in tables or specific divs
+            # Try multiple strategies to find the price
+            
+            # Strategy 1: Look for EUA-specific content
+            text_content = soup.get_text()
+            
+            # Look for EUA price patterns (EUA, EU ETS, European Union Allowance)
+            eua_patterns = [
+                r'EUA[:\s]+([\d,]+\.?\d*)',
+                r'EU\s+ETS[:\s]+([\d,]+\.?\d*)',
+                r'European\s+Union\s+Allowance[:\s]+([\d,]+\.?\d*)',
+                r'€\s*([\d,]+\.?\d{2})\s*(?:EUR|€)?\s*(?:EUA|EU\s+ETS)',
+                r'(?:EUA|EU\s+ETS)[:\s]*€\s*([\d,]+\.?\d{2})',
+            ]
+            
+            for pattern in eua_patterns:
+                matches = re.findall(pattern, text_content, re.IGNORECASE)
+                for match in matches:
+                    try:
+                        price = float(match.replace(',', ''))
+                        # Validate price range (EUA typically 50-100 EUR)
+                        # Wider range than other sources to accommodate historical variations
+                        if 50 <= price <= 100:
+                            logger.info(f"Found CarbonCredits.com EUA price: €{price:.2f}")
+                            return {
+                                'price': round(price, 2),
+                                'timestamp': datetime.now(timezone.utc),
+                                'currency': 'EUR',
+                                'change24h': self._calculate_24h_change()
+                            }
+                    except ValueError:
+                        continue
+            
+            # Strategy 2: Look for price tables
+            tables = soup.find_all('table')
+            for table in tables:
+                rows = table.find_all('tr')
+                for row in rows:
+                    cells = row.find_all(['td', 'th'])
+                    for i, cell in enumerate(cells):
+                        cell_text = cell.get_text().strip()
+                        # Check if cell contains EUA or EU ETS
+                        if re.search(r'EUA|EU\s+ETS|European\s+Union', cell_text, re.IGNORECASE):
+                            # Look for price in adjacent cells
+                            for j in range(max(0, i-2), min(len(cells), i+3)):
+                                price_text = cells[j].get_text().strip()
+                                price_match = re.search(r'([\d,]+\.?\d{2})', price_text.replace(',', ''))
+                                if price_match:
+                                    try:
+                                        price = float(price_match.group(1))
+                                        if 50 <= price <= 100:
+                                            logger.info(f"Found CarbonCredits.com EUA price in table: €{price:.2f}")
+                                            return {
+                                                'price': round(price, 2),
+                                                'timestamp': datetime.now(timezone.utc),
+                                                'currency': 'EUR',
+                                                'change24h': self._calculate_24h_change()
+                                            }
+                                    except ValueError:
+                                        continue
+            
+            # Strategy 3: Look for data attributes or specific classes
+            price_elements = soup.find_all(['div', 'span', 'p'], 
+                                         class_=re.compile(r'price|eua|ets|carbon', re.I))
+            for elem in price_elements:
+                elem_text = elem.get_text()
+                # Check if element mentions EUA or EU ETS
+                if re.search(r'EUA|EU\s+ETS', elem_text, re.IGNORECASE):
+                    price_match = re.search(r'([\d,]+\.?\d{2})', elem_text.replace(',', ''))
+                    if price_match:
+                        try:
+                            price = float(price_match.group(1))
+                            if 50 <= price <= 100:
+                                logger.info(f"Found CarbonCredits.com EUA price in element: €{price:.2f}")
+                                return {
+                                    'price': round(price, 2),
+                                    'timestamp': datetime.now(timezone.utc),
+                                    'currency': 'EUR',
+                                    'change24h': self._calculate_24h_change()
+                                }
+                        except ValueError:
+                            continue
+            
+            # Strategy 4: Look for first reasonable price if page structure is unknown
+            # This is a fallback - look for any price in EUR range
+            all_price_matches = re.findall(r'€\s*([\d,]+\.?\d{2})|([\d,]+\.?\d{2})\s*EUR', text_content)
+            for match in all_price_matches:
+                price_str = match[0] if match[0] else match[1]
+                try:
+                    price = float(price_str.replace(',', ''))
+                    if 50 <= price <= 100:
+                        logger.info(f"Found CarbonCredits.com price (fallback): €{price:.2f}")
+                        return {
+                            'price': round(price, 2),
+                            'timestamp': datetime.now(timezone.utc),
+                            'currency': 'EUR',
+                            'change24h': self._calculate_24h_change()
+                        }
+                except ValueError:
+                    continue
+            
+            logger.debug("CarbonCredits.com: No EUA price found")
+            return None
+            
+        except Exception as e:
+            logger.debug(f"CarbonCredits.com fetch failed: {e}")
+            return None
     
     def _fetch_from_tradingview(self) -> Optional[Dict]:
         """Fetch EU ETS price from TradingView widget/data"""
@@ -487,13 +732,14 @@ class ICEScraper:
             'price': self.last_price,
             'timestamp': self.last_timestamp or datetime.now(timezone.utc),
             'currency': 'EUR',
-            'change24h': self._calculate_24h_change()
+            'change24h': self._calculate_24h_change(),
+            'source': 'Cached'
         }
     
-    def scrape_cer_price(self, eua_price: Optional[float] = None) -> Optional[Dict]:
+    def scrape_cea_price(self, eua_price: Optional[float] = None) -> Optional[Dict]:
         """
-        Scrape or generate Chinese CER (Certified Emission Reduction) price
-        CER prices typically trade at 30-50% discount to EUA prices
+        Scrape or generate Chinese CEA (China ETS Allowances) price
+        CEA prices typically trade at 30-50% discount to EUA prices
         """
         try:
             import random
@@ -503,8 +749,8 @@ class ICEScraper:
             if eua_price is None:
                 eua_price = self.last_price if self.last_price else 75.0
             
-            # CER typically trades at 30-50% discount to EUA
-            # Base discount around 40% (CER at ~60% of EUA price)
+            # CEA typically trades at 30-50% discount to EUA
+            # Base discount around 40% (CEA at ~60% of EUA price)
             base_discount = 0.40
             discount_variation = 0.10  # ±10% variation (so 30-50% discount range)
             
@@ -512,38 +758,38 @@ class ICEScraper:
             current_time = datetime.now(timezone.utc)
             time_seed = current_time.hour * 60 + current_time.minute
             
-            # Calculate base CER price
-            base_cer_price = eua_price * (1 - base_discount)
+            # Calculate base CEA price
+            base_cea_price = eua_price * (1 - base_discount)
             
             # Add realistic variation
             random.seed(time_seed % 1000)
             variation = random.uniform(-discount_variation, discount_variation)
-            cer_price = base_cer_price * (1 + variation)
+            cea_price = base_cea_price * (1 + variation)
             
-            # Ensure CER price stays in realistic range (typically 20-60 EUR)
-            cer_price = max(20.0, min(60.0, cer_price))
+            # Ensure CEA price stays in realistic range (typically 20-60 EUR)
+            cea_price = max(20.0, min(60.0, cea_price))
             
             # Calculate 24h change
             if len(self.price_history) > 0:
-                # Use CER price history if available, otherwise estimate from EUA change
+                # Use CEA price history if available, otherwise estimate from EUA change
                 old_price = self.price_history[0] if len(self.price_history) < 24 else self.price_history[-24]
                 if old_price > 0:
-                    change24h = ((cer_price - old_price) / old_price) * 100
+                    change24h = ((cea_price - old_price) / old_price) * 100
                 else:
                     change24h = random.uniform(-3.0, 3.0)
             else:
                 change24h = random.uniform(-3.0, 3.0)
             
-            logger.info(f"Generated CER price: €{cer_price:.2f} (24h: {change24h:.2f}%)")
+            logger.info(f"Generated CEA price: €{cea_price:.2f} (24h: {change24h:.2f}%)")
             
             return {
-                'price': round(cer_price, 2),
+                'price': round(cea_price, 2),
                 'timestamp': current_time,
                 'currency': 'EUR',
                 'change24h': round(change24h, 2)
             }
         except Exception as e:
-            logger.debug(f"CER price generation failed: {e}")
+            logger.debug(f"CEA price generation failed: {e}")
             return None
 
 
@@ -572,7 +818,8 @@ class AlternativePriceSource:
                     'price': round(float(data['price']), 2),
                     'timestamp': datetime.fromisoformat(data.get('timestamp', datetime.now(timezone.utc).isoformat())),
                     'currency': 'EUR',
-                    'change24h': round(float(data.get('change_24h', 0)), 2) if data.get('change_24h') else None
+                    'change24h': round(float(data.get('change_24h', 0)), 2) if data.get('change_24h') else None,
+                    'source': 'OilPriceAPI (fallback)'
                 }
         except Exception as e:
             logger.warning(f"OilPriceAPI fetch failed: {e}")

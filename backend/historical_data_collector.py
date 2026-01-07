@@ -1,5 +1,5 @@
 """
-Historical Data Collector for EU ETS (EUA) and CER prices
+Historical Data Collector for EU ETS (EUA) and CEA prices
 Collects historical price data from public sources and stores it locally
 """
 
@@ -18,7 +18,18 @@ logger = logging.getLogger(__name__)
 
 
 class HistoricalDataCollector:
-    """Collects and stores historical price data for EUA and CER"""
+    """
+    Collects and stores historical price data for EUA and CEA.
+    
+    This class handles historical price data collection with robust timezone handling.
+    All dates are normalized to UTC timezone for consistent comparisons and storage.
+    
+    Key features:
+    - Automatic timezone normalization for date comparisons
+    - Support for multiple ISO date formats
+    - Efficient date range filtering
+    - Error handling for invalid or missing dates
+    """
     
     def __init__(self, data_dir: str = "backend/data"):
         self.data_dir = data_dir
@@ -33,7 +44,71 @@ class HistoricalDataCollector:
         os.makedirs(self.data_dir, exist_ok=True)
         
         self.eua_file = os.path.join(self.data_dir, "historical_eua.json")
-        self.cer_file = os.path.join(self.data_dir, "historical_cer.json")
+        self.cea_file = os.path.join(self.data_dir, "historical_cea.json")
+    
+    def _normalize_date_for_comparison(self, date_str: str, reference_date: datetime) -> Optional[datetime]:
+        """
+        Normalize a date string to match the timezone awareness of a reference date.
+        
+        Handles various ISO date formats:
+        - 2024-12-29T00:00:00+00:00 (with timezone offset)
+        - 2024-12-29T00:00:00Z (with Z suffix)
+        - 2024-12-29T00:00:00 (naive, no timezone)
+        
+        Args:
+            date_str: Date string in ISO format
+            reference_date: Reference datetime to match timezone awareness
+            
+        Returns:
+            Normalized datetime object, or None if parsing fails
+        """
+        try:
+            # Normalize 'Z' suffix to '+00:00' for consistent parsing
+            normalized_str = date_str.replace('Z', '+00:00') if 'Z' in date_str else date_str
+            entry_date = datetime.fromisoformat(normalized_str)
+            
+            # Ensure timezone-aware if reference_date is timezone-aware
+            if reference_date.tzinfo and not entry_date.tzinfo:
+                entry_date = entry_date.replace(tzinfo=timezone.utc)
+            elif not reference_date.tzinfo and entry_date.tzinfo:
+                entry_date = entry_date.replace(tzinfo=None)
+            
+            return entry_date
+        except (ValueError, KeyError, AttributeError) as e:
+            logger.warning(f"Error parsing date {date_str}: {e}")
+            return None
+    
+    def _filter_data_by_date_range(self, data: List[Dict], start_date: datetime, end_date: datetime) -> List[Dict]:
+        """
+        Filter data entries by date range with proper timezone handling.
+        
+        Args:
+            data: List of dictionaries containing 'date' keys
+            start_date: Start of date range (inclusive)
+            end_date: End of date range (inclusive)
+            
+        Returns:
+            Filtered list of entries within the date range
+        """
+        filtered = []
+        skipped_count = 0
+        
+        for entry in data:
+            date_str = entry.get('date')
+            if not date_str:
+                skipped_count += 1
+                continue
+            
+            entry_date = self._normalize_date_for_comparison(date_str, start_date)
+            if entry_date and start_date <= entry_date <= end_date:
+                filtered.append(entry)
+            elif entry_date is None:
+                skipped_count += 1
+        
+        if skipped_count > 0:
+            logger.debug(f"Skipped {skipped_count} entries with invalid or missing dates")
+        
+        return filtered
     
     def load_existing_data(self, file_path: str) -> List[Dict]:
         """Load existing historical data from JSON file"""
@@ -83,14 +158,18 @@ class HistoricalDataCollector:
         # 2024: ~60-80 EUR (volatility)
         # 2025: ~70-85 EUR (current levels)
         
-        # Calculate years for trend interpolation
-        base_year = 2020
-        base_price = 28.0  # Starting price in 2020
-        
         while current_date <= end_date:
             year = current_date.year
             days_in_year = 366 if (year % 4 == 0 and year % 100 != 0) or (year % 400 == 0) else 365
-            day_of_year = (current_date - datetime(year, 1, 1)).days
+            # Calculate day of year - normalize to UTC if timezone-aware, otherwise use naive
+            if current_date.tzinfo:
+                # Convert to UTC for consistent calculation
+                current_utc = current_date.astimezone(timezone.utc)
+                year_start_utc = datetime(year, 1, 1, tzinfo=timezone.utc)
+                day_of_year = (current_utc - year_start_utc).days
+            else:
+                year_start = datetime(year, 1, 1)
+                day_of_year = (current_date - year_start).days
             
             # Calculate base price trend based on year
             if year == 2020:
@@ -158,24 +237,26 @@ class HistoricalDataCollector:
         
         return historical_data
     
-    def generate_realistic_cer_history(self, eua_data: List[Dict]) -> List[Dict]:
+    def generate_realistic_cea_history(self, eua_data: List[Dict]) -> List[Dict]:
         """
-        Generate realistic CER historical prices based on EUA prices
-        CER typically trades at 30-50% discount to EUA
+        Generate realistic CEA historical prices based on EUA prices
+        CEA typically trades at 30-50% discount to EUA
         """
-        cer_data = []
+        cea_data = []
         
         for eua_entry in eua_data:
             eua_price = eua_entry['price']
             date_str = eua_entry['date']
             
-            # CER discount varies over time:
+            # CEA discount varies over time:
             # Before 2021: Higher discount (40-50%) - less demand
             # 2021-2023: Lower discount (30-40%) - increased demand
             # 2024+: Moderate discount (35-45%) - balanced market
             
             try:
-                entry_date = datetime.fromisoformat(date_str.replace('Z', '+00:00'))
+                # Use robust date parsing - handle various ISO formats
+                normalized_str = date_str.replace('Z', '+00:00') if 'Z' in date_str else date_str
+                entry_date = datetime.fromisoformat(normalized_str)
                 year = entry_date.year
                 
                 if year < 2021:
@@ -190,27 +271,38 @@ class HistoricalDataCollector:
                 
                 # Add some randomness
                 discount = base_discount + random.uniform(-discount_variation, discount_variation)
-                cer_price = eua_price * (1 - discount)
+                cea_price = eua_price * (1 - discount)
                 
-                # Ensure CER price stays in realistic range (typically 15-60 EUR)
-                cer_price = max(15.0, min(60.0, cer_price))
+                # Ensure CEA price stays in realistic range (typically 15-60 EUR)
+                cea_price = max(15.0, min(60.0, cea_price))
                 
-                cer_data.append({
+                cea_data.append({
                     'date': date_str,
-                    'price': round(cer_price, 2),
+                    'price': round(cea_price, 2),
                     'currency': 'EUR'
                 })
             except Exception as e:
-                logger.warning(f"Error processing CER entry for {date_str}: {e}")
+                logger.warning(f"Error processing CEA entry for {date_str}: {e}")
                 continue
         
-        return cer_data
+        return cea_data
     
     def collect_eua_history(self, start_date: datetime, end_date: datetime, 
                            use_existing: bool = True) -> List[Dict]:
         """
-        Collect EUA historical data
-        Tries to fetch from public sources, falls back to realistic generation
+        Collect EUA historical data.
+        
+        Tries to fetch from public sources, falls back to realistic generation.
+        All dates are normalized for timezone-aware comparisons using helper methods.
+        
+        Args:
+            start_date: Start of date range (inclusive), timezone-aware or naive
+            end_date: End of date range (inclusive), timezone-aware or naive
+            use_existing: Whether to load and use existing data from JSON files
+            
+        Returns:
+            List of dictionaries with 'date', 'price', and 'currency' keys
+            Dates are returned in ISO format with UTC timezone
         """
         # Load existing data if available
         existing_data = []
@@ -229,11 +321,7 @@ class HistoricalDataCollector:
         if not needed_dates:
             logger.info("All requested EUA historical data already exists")
             # Filter existing data to requested range
-            filtered = [
-                entry for entry in existing_data
-                if start_date <= datetime.fromisoformat(entry['date'].replace('Z', '+00:00')) <= end_date
-            ]
-            return filtered
+            return self._filter_data_by_date_range(existing_data, start_date, end_date)
         
         logger.info(f"Generating EUA historical data for {len(needed_dates)} dates")
         
@@ -255,33 +343,40 @@ class HistoricalDataCollector:
         self.save_data(self.eua_file, all_data)
         
         # Return filtered data for requested range
-        filtered = [
-            entry for entry in all_data
-            if start_date <= datetime.fromisoformat(entry['date'].replace('Z', '+00:00')) <= end_date
-        ]
-        
-        return filtered
+        return self._filter_data_by_date_range(all_data, start_date, end_date)
     
-    def collect_cer_history(self, start_date: datetime, end_date: datetime,
+    def collect_cea_history(self, start_date: datetime, end_date: datetime,
                            eua_data: Optional[List[Dict]] = None,
                            use_existing: bool = True) -> List[Dict]:
         """
-        Collect CER historical data
-        Uses EUA data to calculate CER prices if EUA data is provided
+        Collect CEA historical data.
+        
+        Uses EUA data to calculate CEA prices if EUA data is provided.
+        All dates are normalized for timezone-aware comparisons using helper methods.
+        
+        Args:
+            start_date: Start of date range (inclusive), timezone-aware or naive
+            end_date: End of date range (inclusive), timezone-aware or naive
+            eua_data: Optional EUA data to use for CEA price calculation
+            use_existing: Whether to load and use existing data from JSON files
+            
+        Returns:
+            List of dictionaries with 'date', 'price', and 'currency' keys
+            Dates are returned in ISO format with UTC timezone
         """
         # Load existing data if available
         existing_data = []
         if use_existing:
-            existing_data = self.load_existing_data(self.cer_file)
+            existing_data = self.load_existing_data(self.cea_file)
         
-        # If EUA data is provided, use it to generate CER data
+        # If EUA data is provided, use it to generate CEA data
         if eua_data:
-            logger.info("Generating CER historical data based on EUA data")
-            cer_data = self.generate_realistic_cer_history(eua_data)
+            logger.info("Generating CEA historical data based on EUA data")
+            cea_data = self.generate_realistic_cea_history(eua_data)
             
             # Merge with existing data
             existing_dict = {entry['date']: entry for entry in existing_data}
-            for entry in cer_data:
+            for entry in cea_data:
                 existing_dict[entry['date']] = entry
             
             # Convert back to list and sort
@@ -289,39 +384,29 @@ class HistoricalDataCollector:
             all_data.sort(key=lambda x: x['date'])
             
             # Save updated data
-            self.save_data(self.cer_file, all_data)
+            self.save_data(self.cea_file, all_data)
             
             # Return filtered data for requested range
-            filtered = [
-                entry for entry in all_data
-                if start_date <= datetime.fromisoformat(entry['date'].replace('Z', '+00:00')) <= end_date
-            ]
-            
-            return filtered
+            return self._filter_data_by_date_range(all_data, start_date, end_date)
         
-        # Otherwise, load existing CER data
-        filtered = [
-            entry for entry in existing_data
-            if start_date <= datetime.fromisoformat(entry['date'].replace('Z', '+00:00')) <= end_date
-        ]
-        
-        return filtered
+        # Otherwise, load existing CEA data
+        return self._filter_data_by_date_range(existing_data, start_date, end_date)
     
     def get_historical_data(self, start_date: datetime, end_date: datetime) -> Dict[str, List[Dict]]:
         """
-        Get both EUA and CER historical data for the specified date range
+        Get both EUA and CEA historical data for the specified date range
         """
         logger.info(f"Collecting historical data from {start_date.date()} to {end_date.date()}")
         
         # Collect EUA data
         eua_data = self.collect_eua_history(start_date, end_date)
         
-        # Collect CER data (using EUA data as reference)
-        cer_data = self.collect_cer_history(start_date, end_date, eua_data=eua_data)
+        # Collect CEA data (using EUA data as reference)
+        cea_data = self.collect_cea_history(start_date, end_date, eua_data=eua_data)
         
         return {
             'eua': eua_data,
-            'cer': cer_data
+            'cea': cea_data
         }
 
 
@@ -329,7 +414,7 @@ def main():
     """Main function for standalone script execution"""
     import argparse
     
-    parser = argparse.ArgumentParser(description='Collect historical EUA and CER price data')
+    parser = argparse.ArgumentParser(description='Collect historical EUA and CEA price data')
     parser.add_argument('--start-date', type=str, default='2020-01-01',
                        help='Start date (YYYY-MM-DD)')
     parser.add_argument('--end-date', type=str, default=None,
@@ -356,7 +441,7 @@ def main():
     collector = HistoricalDataCollector(data_dir=args.data_dir)
     data = collector.get_historical_data(start_date, end_date)
     
-    print(f"\nCollected {len(data['eua'])} EUA entries and {len(data['cer'])} CER entries")
+    print(f"\nCollected {len(data['eua'])} EUA entries and {len(data['cea'])} CEA entries")
     print(f"Date range: {start_date.date()} to {end_date.date()}")
     print(f"Data saved to {collector.data_dir}/")
 

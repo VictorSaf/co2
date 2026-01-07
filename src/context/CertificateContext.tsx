@@ -1,7 +1,7 @@
 import { createContext, useContext, useState, ReactNode, useEffect, useCallback } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { addMinutes } from 'date-fns';
-import { Certificate, Portfolio, MarketOffer, Transaction, CertificateType, CO2Emissions } from '../types';
+import { Certificate, Portfolio, MarketOffer, Transaction, CertificateType, CertificateStatus, CO2Emissions } from '../types';
 import { useAuth } from './AuthContext';
 import { getRandomSeller } from '../data/sellers';
 import { addActivity, initializeActivityHistory } from '../data/activityHistory';
@@ -23,7 +23,7 @@ const CertificateContext = createContext<CertificateContextType | undefined>(und
 // Helper function to generate initial offers with best price matching live price
 // All offers are ensured to be at or above live price
 function generateInitialOffers(
-  type: 'CER' | 'EUA',
+  type: 'CEA' | 'EUA',
   count: number,
   livePrice: number | null,
   defaultMinPrice: number,
@@ -52,7 +52,7 @@ function generateInitialOffers(
       sellerId: seller.id,
       sellerName: seller.name,
       type: type as CertificateType,
-      amount: Math.floor(Math.random() * (type === 'CER' ? 5000 : 3000)) + (type === 'CER' ? 1000 : 500),
+      amount: Math.floor(Math.random() * (type === 'CEA' ? 5000 : 3000)) + (type === 'CEA' ? 1000 : 500),
       price: price,
       timestamp: new Date(),
     });
@@ -65,7 +65,7 @@ function generateInitialOffers(
 // Helper function to ensure best price matches live price and all offers are at or above live price
 function ensureBestPriceMatchesLivePrice(
   offers: MarketOffer[],
-  type: 'CER' | 'EUA',
+  type: 'CEA' | 'EUA',
   livePrice: number | null
 ): MarketOffer[] {
   if (livePrice === null) return offers;
@@ -117,9 +117,9 @@ export function CertificateProvider({ children }: { children: ReactNode }) {
   const { user, updateUserBalance } = useAuth();
   const [portfolio, setPortfolio] = useState<Portfolio>({
     certificates: [],
-    totalCER: 0,
+    totalCEA: 0,
     totalEUA: 0,
-    convertingCER: 0
+    convertingCEA: 0
   });
   
   // Initialize market offers as empty - MarketOffersSync will create them with live prices
@@ -182,10 +182,10 @@ export function CertificateProvider({ children }: { children: ReactNode }) {
           if (cert.status === 'Converting' && cert.conversionStartedAt) {
             const conversionEndTime = addMinutes(new Date(cert.conversionStartedAt), 5);
             if (new Date() >= conversionEndTime) {
-              const updatedCert = {
+              const updatedCert: Certificate = {
                 ...cert,
-                type: 'EUA',
-                status: 'Available',
+                type: 'EUA' as CertificateType,
+                status: 'Available' as CertificateStatus,
                 conversionCompletedAt: new Date()
               };
               
@@ -207,21 +207,21 @@ export function CertificateProvider({ children }: { children: ReactNode }) {
               type: 'CONVERSION_COMPLETE',
               certificateId: cert.id,
               amount: cert.amount,
-              details: `Completed conversion of ${cert.amount} tons CER to EUA certificate`
+              details: `Completed conversion of ${cert.amount} tons CEA to EUA certificate`
             });
           });
         }
         
         // Calculate new totals
-        const totalCER = updatedCertificates.filter(c => c.type === 'CER' && c.status === 'Available').reduce((sum, c) => sum + c.amount, 0);
+        const totalCEA = updatedCertificates.filter(c => c.type === 'CEA' && c.status === 'Available').reduce((sum, c) => sum + c.amount, 0);
         const totalEUA = updatedCertificates.filter(c => c.type === 'EUA' && c.status === 'Available').reduce((sum, c) => sum + c.amount, 0);
-        const convertingCER = updatedCertificates.filter(c => c.status === 'Converting').reduce((sum, c) => sum + c.amount, 0);
+        const convertingCEA = updatedCertificates.filter(c => c.status === 'Converting').reduce((sum, c) => sum + c.amount, 0);
         
         const newPortfolio = {
           certificates: updatedCertificates,
-          totalCER,
+          totalCEA,
           totalEUA,
-          convertingCER
+          convertingCEA
         };
         
         if (user) {
@@ -294,15 +294,15 @@ export function CertificateProvider({ children }: { children: ReactNode }) {
     // Update state
     setPortfolio(prev => {
       const updatedCertificates = [...prev.certificates, newCertificate];
-      const totalCER = updatedCertificates.filter(c => c.type === 'CER' && c.status === 'Available').reduce((sum, c) => sum + c.amount, 0);
+      const totalCEA = updatedCertificates.filter(c => c.type === 'CEA' && c.status === 'Available').reduce((sum, c) => sum + c.amount, 0);
       const totalEUA = updatedCertificates.filter(c => c.type === 'EUA' && c.status === 'Available').reduce((sum, c) => sum + c.amount, 0);
-      const convertingCER = updatedCertificates.filter(c => c.status === 'Converting').reduce((sum, c) => sum + c.amount, 0);
+      const convertingCEA = updatedCertificates.filter(c => c.status === 'Converting').reduce((sum, c) => sum + c.amount, 0);
       
       const newPortfolio = {
         certificates: updatedCertificates,
-        totalCER,
+        totalCEA,
         totalEUA,
-        convertingCER
+        convertingCEA
       };
       
       localStorage.setItem(`portfolio-${user.id}`, JSON.stringify(newPortfolio));
@@ -323,7 +323,7 @@ export function CertificateProvider({ children }: { children: ReactNode }) {
   }, [user, updateUserBalance]);
   
   const convertCertificate = useCallback(async (certificate: Certificate): Promise<boolean> => {
-    if (!user || certificate.type !== 'CER' || certificate.status !== 'Available') {
+    if (!user || certificate.type !== 'CEA' || certificate.status !== 'Available') {
       return false;
     }
     
@@ -340,7 +340,7 @@ export function CertificateProvider({ children }: { children: ReactNode }) {
       type: 'CONVERSION_START',
       certificateId: certificate.id,
       amount: certificate.amount,
-      details: `Started conversion of ${certificate.amount} tons CER certificate`
+      details: `Started conversion of ${certificate.amount} tons CEA certificate`
     });
     
     setPortfolio(prev => {
@@ -348,21 +348,21 @@ export function CertificateProvider({ children }: { children: ReactNode }) {
         cert.id === certificate.id 
           ? { 
               ...cert, 
-              status: 'Converting', 
+              status: 'Converting' as CertificateStatus, 
               conversionStartedAt: timestamp 
             }
           : cert
       );
       
-      const totalCER = updatedCertificates.filter(c => c.type === 'CER' && c.status === 'Available').reduce((sum, c) => sum + c.amount, 0);
+      const totalCEA = updatedCertificates.filter(c => c.type === 'CEA' && c.status === 'Available').reduce((sum, c) => sum + c.amount, 0);
       const totalEUA = updatedCertificates.filter(c => c.type === 'EUA' && c.status === 'Available').reduce((sum, c) => sum + c.amount, 0);
-      const convertingCER = updatedCertificates.filter(c => c.status === 'Converting').reduce((sum, c) => sum + c.amount, 0);
+      const convertingCEA = updatedCertificates.filter(c => c.status === 'Converting').reduce((sum, c) => sum + c.amount, 0);
       
       const newPortfolio = {
         certificates: updatedCertificates,
-        totalCER,
+        totalCEA,
         totalEUA,
-        convertingCER
+        convertingCEA
       };
       
       localStorage.setItem(`portfolio-${user.id}`, JSON.stringify(newPortfolio));
@@ -399,21 +399,21 @@ export function CertificateProvider({ children }: { children: ReactNode }) {
         cert.id === certificate.id 
           ? { 
               ...cert, 
-              status: 'Verified', 
+              status: 'Verified' as CertificateStatus, 
               verifiedAt: timestamp
             }
           : cert
       );
       
-      const totalCER = updatedCertificates.filter(c => c.type === 'CER' && c.status === 'Available').reduce((sum, c) => sum + c.amount, 0);
+      const totalCEA = updatedCertificates.filter(c => c.type === 'CEA' && c.status === 'Available').reduce((sum, c) => sum + c.amount, 0);
       const totalEUA = updatedCertificates.filter(c => c.type === 'EUA' && c.status === 'Available').reduce((sum, c) => sum + c.amount, 0);
-      const convertingCER = updatedCertificates.filter(c => c.status === 'Converting').reduce((sum, c) => sum + c.amount, 0);
+      const convertingCEA = updatedCertificates.filter(c => c.status === 'Converting').reduce((sum, c) => sum + c.amount, 0);
       
       const newPortfolio = {
         certificates: updatedCertificates,
-        totalCER,
+        totalCEA,
         totalEUA,
-        convertingCER
+        convertingCEA
       };
       
       localStorage.setItem(`portfolio-${user.id}`, JSON.stringify(newPortfolio));
@@ -462,15 +462,15 @@ export function CertificateProvider({ children }: { children: ReactNode }) {
     setPortfolio(prev => {
       const updatedCertificates = prev.certificates.filter(cert => cert.id !== certificate.id);
       
-      const totalCER = updatedCertificates.filter(c => c.type === 'CER' && c.status === 'Available').reduce((sum, c) => sum + c.amount, 0);
+      const totalCEA = updatedCertificates.filter(c => c.type === 'CEA' && c.status === 'Available').reduce((sum, c) => sum + c.amount, 0);
       const totalEUA = updatedCertificates.filter(c => c.type === 'EUA' && c.status === 'Available').reduce((sum, c) => sum + c.amount, 0);
-      const convertingCER = updatedCertificates.filter(c => c.status === 'Converting').reduce((sum, c) => sum + c.amount, 0);
+      const convertingCEA = updatedCertificates.filter(c => c.status === 'Converting').reduce((sum, c) => sum + c.amount, 0);
       
       const newPortfolio = {
         certificates: updatedCertificates,
-        totalCER,
+        totalCEA,
         totalEUA,
-        convertingCER
+        convertingCEA
       };
       
       localStorage.setItem(`portfolio-${user.id}`, JSON.stringify(newPortfolio));

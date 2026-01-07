@@ -1,0 +1,1081 @@
+<!DOCTYPE html>
+<!-- saved from url=(0054)file:///Users/victorsafta/Downloads/nihao-login_2.html -->
+<html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NG</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        :root {
+            --dark-void: #0a0a0c;
+            --dark-matter: #12121a;
+            --carbon-gray: #1a1a24;
+            --mist: rgba(255, 255, 255, 0.03);
+            --ghost: rgba(255, 255, 255, 0.06);
+            --whisper: rgba(255, 255, 255, 0.12);
+            --text-dim: rgba(255, 255, 255, 0.4);
+            --text-soft: rgba(255, 255, 255, 0.6);
+            --text-light: rgba(255, 255, 255, 0.85);
+            --accent-green: #2dd4bf;
+            --accent-emerald: #10b981;
+            --accent-teal: #14b8a6;
+        }
+        
+        html, body {
+            height: 100%;
+            overflow: hidden;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--dark-void);
+            color: var(--text-light);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        /* Canvas Background */
+        #backgroundCanvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+        }
+        
+        #ecologyCanvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            pointer-events: none;
+        }
+        
+        /* Gradient Overlay */
+        .gradient-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(ellipse at 15% 85%, rgba(16, 185, 129, 0.12) 0%, transparent 45%),
+                radial-gradient(ellipse at 80% 20%, rgba(45, 212, 191, 0.08) 0%, transparent 50%),
+                radial-gradient(ellipse at 50% 50%, rgba(10, 10, 12, 0.7) 0%, transparent 100%);
+            z-index: 2;
+            pointer-events: none;
+        }
+        
+        /* Brand Watermark */
+        .brand-watermark {
+            position: fixed;
+            bottom: 8%;
+            right: 6%;
+            z-index: 5;
+            pointer-events: none;
+            opacity: 0;
+            animation: fadeInBrand 3s ease-out 1s forwards;
+        }
+        
+        .brand-watermark h1 {
+            font-size: clamp(2.5rem, 6vw, 5rem);
+            font-weight: 200;
+            letter-spacing: 0.5em;
+            color: transparent;
+            background: linear-gradient(
+                180deg,
+                rgba(255, 255, 255, 0.25) 0%,
+                rgba(45, 212, 191, 0.4) 50%,
+                rgba(16, 185, 129, 0.2) 100%
+            );
+            -webkit-background-clip: text;
+            background-clip: text;
+            text-transform: uppercase;
+            position: relative;
+            text-shadow: 0 0 80px rgba(45, 212, 191, 0.15);
+        }
+        
+        .brand-watermark span {
+            display: block;
+            font-size: 0.7rem;
+            letter-spacing: 0.5em;
+            color: var(--text-dim);
+            margin-top: 0.5rem;
+            font-weight: 300;
+        }
+        
+        @keyframes fadeInBrand {
+            to { opacity: 1; }
+        }
+        
+        /* Main Container */
+        .main-container {
+            position: relative;
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4rem;
+        }
+        
+        /* Logo Area */
+        .logo-area {
+            text-align: center;
+            opacity: 0;
+            animation: fadeInUp 1s ease-out 0.3s forwards;
+        }
+        
+        .logo-icon {
+            width: 60px;
+            height: 60px;
+            margin: 0 auto 1.5rem;
+            position: relative;
+        }
+        
+        .logo-icon svg {
+            width: 100%;
+            height: 100%;
+        }
+        
+        /* Action Buttons */
+        .actions {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            width: 220px;
+            opacity: 0;
+            animation: fadeInUp 1s ease-out 0.6s forwards;
+        }
+        
+        .btn {
+            position: relative;
+            padding: 1rem 2rem;
+            border: none;
+            background: transparent;
+            color: rgba(255, 255, 255, 0.5);
+            font-family: inherit;
+            font-size: 0.7rem;
+            font-weight: 300;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            cursor: pointer;
+            overflow: hidden;
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .btn::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .btn::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, var(--ghost) 0%, transparent 100%);
+            opacity: 0;
+            transition: opacity 0.4s ease;
+        }
+        
+        .btn:hover {
+            color: rgba(255, 255, 255, 0.85);
+        }
+        
+        .btn:hover::before {
+            border-color: rgba(45, 212, 191, 0.4);
+            box-shadow: 
+                0 0 40px rgba(45, 212, 191, 0.1),
+                inset 0 0 30px rgba(45, 212, 191, 0.03);
+        }
+        
+        .btn:hover::after {
+            opacity: 1;
+        }
+        
+        .btn-text {
+            position: relative;
+            z-index: 1;
+        }
+        
+        .btn-primary::before {
+            background: rgba(45, 212, 191, 0.05);
+            border-color: rgba(45, 212, 191, 0.2);
+        }
+        
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        /* Modal Overlay */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(10, 10, 12, 0.95);
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.4s ease;
+            backdrop-filter: blur(10px);
+        }
+        
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        .modal {
+            background: var(--dark-matter);
+            border: 1px solid var(--whisper);
+            padding: 3rem;
+            width: 90%;
+            max-width: 380px;
+            transform: translateY(20px);
+            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .modal-overlay.active .modal {
+            transform: translateY(0);
+        }
+        
+        .modal-header {
+            text-align: center;
+            margin-bottom: 2.5rem;
+        }
+        
+        .modal-title {
+            font-size: 0.7rem;
+            letter-spacing: 0.4em;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            font-weight: 300;
+        }
+        
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        
+        .form-input {
+            width: 100%;
+            padding: 1rem;
+            background: var(--mist);
+            border: 1px solid var(--ghost);
+            color: var(--text-light);
+            font-family: inherit;
+            font-size: 0.85rem;
+            letter-spacing: 0.05em;
+            transition: all 0.3s ease;
+        }
+        
+        .form-input::placeholder {
+            color: var(--text-dim);
+            text-transform: uppercase;
+            font-size: 0.7rem;
+            letter-spacing: 0.2em;
+        }
+        
+        .form-input:focus {
+            outline: none;
+            border-color: var(--accent-teal);
+            background: var(--ghost);
+        }
+        
+        .modal-actions {
+            display: flex;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+        
+        .modal-actions .btn {
+            flex: 1;
+            padding: 0.875rem 1rem;
+        }
+        
+        .btn-cancel {
+            color: var(--text-dim);
+        }
+        
+        .btn-cancel:hover {
+            color: var(--text-soft);
+        }
+        
+        .btn-cancel::before {
+            border-color: var(--ghost);
+        }
+        
+        .btn-cancel:hover::before {
+            border-color: var(--whisper);
+            box-shadow: none;
+        }
+        
+        .btn-submit::before {
+            background: linear-gradient(135deg, rgba(45, 212, 191, 0.15) 0%, rgba(16, 185, 129, 0.1) 100%);
+            border-color: rgba(45, 212, 191, 0.3);
+        }
+        
+        .btn-submit:hover::before {
+            background: linear-gradient(135deg, rgba(45, 212, 191, 0.25) 0%, rgba(16, 185, 129, 0.15) 100%);
+        }
+        
+        /* Close button */
+        .modal-close {
+            position: absolute;
+            top: 1.5rem;
+            right: 1.5rem;
+            width: 32px;
+            height: 32px;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            opacity: 0.4;
+            transition: opacity 0.3s ease;
+        }
+        
+        .modal-close:hover {
+            opacity: 1;
+        }
+        
+        .modal-close::before,
+        .modal-close::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 16px;
+            height: 1px;
+            background: var(--text-light);
+        }
+        
+        .modal-close::before {
+            transform: translate(-50%, -50%) rotate(45deg);
+        }
+        
+        .modal-close::after {
+            transform: translate(-50%, -50%) rotate(-45deg);
+        }
+        
+        /* Subtle scan line effect */
+        .scanlines {
+            position: fixed;
+            inset: 0;
+            z-index: 4;
+            pointer-events: none;
+            background: repeating-linear-gradient(
+                0deg,
+                transparent,
+                transparent 2px,
+                rgba(0, 0, 0, 0.02) 2px,
+                rgba(0, 0, 0, 0.02) 4px
+            );
+        }
+        
+        /* Responsive */
+        @media (max-width: 480px) {
+            .brand-watermark {
+                bottom: 4%;
+                right: 4%;
+            }
+            
+            .brand-watermark h1 {
+                font-size: 2rem;
+            }
+            
+            .actions {
+                width: 180px;
+            }
+            
+            .modal {
+                padding: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <canvas id="backgroundCanvas" width="1496" height="1050"></canvas>
+    <canvas id="ecologyCanvas" width="1496" height="1050"></canvas>
+    <div class="gradient-overlay"></div>
+    <div class="scanlines"></div>
+    
+    <div class="brand-watermark">
+        <h1>Nihao Group</h1>
+    </div>
+    
+    <div class="main-container">
+        <div class="logo-area">
+            <div class="logo-icon">
+                <svg viewBox="0 0 60 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <!-- CO2 Molecule Abstract -->
+                    <circle cx="30" cy="30" r="8" stroke="rgba(45, 212, 191, 0.4)" stroke-width="0.5" fill="none">
+                        <animate attributeName="r" values="8;10;8" dur="6s" repeatCount="indefinite"></animate>
+                        <animate attributeName="stroke-opacity" values="0.4;0.15;0.4" dur="6s" repeatCount="indefinite"></animate>
+                    </circle>
+                    <circle cx="14" cy="30" r="5" stroke="rgba(255,255,255,0.15)" stroke-width="0.5" fill="none">
+                        <animate attributeName="r" values="5;6;5" dur="5s" repeatCount="indefinite"></animate>
+                    </circle>
+                    <circle cx="46" cy="30" r="5" stroke="rgba(255,255,255,0.15)" stroke-width="0.5" fill="none">
+                        <animate attributeName="r" values="5;6;5" dur="5s" repeatCount="indefinite" begin="0.5s"></animate>
+                    </circle>
+                    <line x1="22" y1="30" x2="19" y2="30" stroke="rgba(255,255,255,0.1)" stroke-width="0.5"></line>
+                    <line x1="38" y1="30" x2="41" y2="30" stroke="rgba(255,255,255,0.1)" stroke-width="0.5"></line>
+                </svg>
+            </div>
+        </div>
+        
+        <div class="actions">
+            <button class="btn btn-primary" onclick="openModal(&#39;login&#39;)">
+                <span class="btn-text">Enter</span>
+            </button>
+            <button class="btn" onclick="openModal(&#39;register&#39;)">
+                <span class="btn-text">Request Access</span>
+            </button>
+        </div>
+    </div>
+    
+    <!-- Login Modal -->
+    <div class="modal-overlay" id="loginModal">
+        <div class="modal">
+            <button class="modal-close" onclick="closeModal(&#39;login&#39;)"></button>
+            <div class="modal-header">
+                <h2 class="modal-title">Authenticate</h2>
+            </div>
+            <form onsubmit="handleLogin(event)">
+                <div class="form-group">
+                    <input type="text" class="form-input" placeholder="Username" required="">
+                </div>
+                <div class="form-group">
+                    <input type="password" class="form-input" placeholder="Password" required="">
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-cancel" onclick="closeModal(&#39;login&#39;)">
+                        <span class="btn-text">Cancel</span>
+                    </button>
+                    <button type="submit" class="btn btn-submit">
+                        <span class="btn-text">Proceed</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Register Modal -->
+    <div class="modal-overlay" id="registerModal">
+        <div class="modal">
+            <button class="modal-close" onclick="closeModal(&#39;register&#39;)"></button>
+            <div class="modal-header">
+                <h2 class="modal-title">Application</h2>
+            </div>
+            <form onsubmit="handleRegister(event)">
+                <div class="form-group">
+                    <input type="text" class="form-input" placeholder="Entity" required="">
+                </div>
+                <div class="form-group">
+                    <input type="email" class="form-input" placeholder="Contact" required="">
+                </div>
+                <div class="form-group">
+                    <input type="text" class="form-input" placeholder="Reference" required="">
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-cancel" onclick="closeModal(&#39;register&#39;)">
+                        <span class="btn-text">Cancel</span>
+                    </button>
+                    <button type="submit" class="btn btn-submit">
+                        <span class="btn-text">Submit</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Canvas Animation
+        const canvas = document.getElementById('backgroundCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        let width, height;
+        let particles = [];
+        let molecules = [];
+        let dataPoints = [];
+        let time = 0;
+        
+        function resize() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+            init();
+        }
+        
+        // CO2 Molecule class
+        class CO2Molecule {
+            constructor() {
+                this.x = Math.random() * width;
+                this.y = Math.random() * height;
+                this.vx = (Math.random() - 0.5) * 0.3;
+                this.vy = (Math.random() - 0.5) * 0.3;
+                this.scale = 0.3 + Math.random() * 0.4;
+                this.rotation = Math.random() * Math.PI * 2;
+                this.rotationSpeed = (Math.random() - 0.5) * 0.01;
+                this.opacity = 0.08 + Math.random() * 0.12;
+                this.pulsePhase = Math.random() * Math.PI * 2;
+            }
+            
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+                this.rotation += this.rotationSpeed;
+                this.pulsePhase += 0.02;
+                
+                // Wrap around
+                if (this.x < -50) this.x = width + 50;
+                if (this.x > width + 50) this.x = -50;
+                if (this.y < -50) this.y = height + 50;
+                if (this.y > height + 50) this.y = -50;
+            }
+            
+            draw() {
+                ctx.save();
+                ctx.translate(this.x, this.y);
+                ctx.rotate(this.rotation);
+                ctx.scale(this.scale, this.scale);
+                
+                const pulse = 1 + Math.sin(this.pulsePhase) * 0.1;
+                
+                // Central carbon atom
+                ctx.beginPath();
+                ctx.arc(0, 0, 12 * pulse, 0, Math.PI * 2);
+                ctx.strokeStyle = `rgba(45, 212, 191, ${this.opacity})`;
+                ctx.lineWidth = 1;
+                ctx.stroke();
+                
+                // Oxygen atoms
+                ctx.beginPath();
+                ctx.arc(-30, 0, 8 * pulse, 0, Math.PI * 2);
+                ctx.strokeStyle = `rgba(255, 255, 255, ${this.opacity * 0.6})`;
+                ctx.stroke();
+                
+                ctx.beginPath();
+                ctx.arc(30, 0, 8 * pulse, 0, Math.PI * 2);
+                ctx.stroke();
+                
+                // Bonds
+                ctx.beginPath();
+                ctx.moveTo(-18, -2);
+                ctx.lineTo(-12, -2);
+                ctx.moveTo(-18, 2);
+                ctx.lineTo(-12, 2);
+                ctx.moveTo(12, -2);
+                ctx.lineTo(18, -2);
+                ctx.moveTo(12, 2);
+                ctx.lineTo(18, 2);
+                ctx.strokeStyle = `rgba(255, 255, 255, ${this.opacity * 0.3})`;
+                ctx.lineWidth = 0.5;
+                ctx.stroke();
+                
+                ctx.restore();
+            }
+        }
+        
+        // Financial data particle
+        class DataParticle {
+            constructor() {
+                this.reset();
+            }
+            
+            reset() {
+                this.x = Math.random() * width;
+                this.y = height + 10;
+                this.speed = 0.2 + Math.random() * 0.5;
+                this.size = 1 + Math.random() * 2;
+                this.opacity = 0.08 + Math.random() * 0.15;
+                this.isGreen = Math.random() > 0.3;
+            }
+            
+            update() {
+                this.y -= this.speed;
+                if (this.y < -10) this.reset();
+            }
+            
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                if (this.isGreen) {
+                    ctx.fillStyle = `rgba(45, 212, 191, ${this.opacity})`;
+                } else {
+                    ctx.fillStyle = `rgba(255, 255, 255, ${this.opacity * 0.5})`;
+                }
+                ctx.fill();
+            }
+        }
+        
+        // Trading chart line
+        class ChartLine {
+            constructor(yBase, amplitude, speed, opacity) {
+                this.yBase = yBase;
+                this.amplitude = amplitude;
+                this.speed = speed;
+                this.opacity = opacity;
+                this.offset = Math.random() * 1000;
+                this.points = [];
+            }
+            
+            update() {
+                this.points = [];
+                for (let x = 0; x < width + 20; x += 3) {
+                    const noise1 = Math.sin((x + time * this.speed + this.offset) * 0.01) * this.amplitude;
+                    const noise2 = Math.sin((x + time * this.speed * 0.7 + this.offset) * 0.02) * this.amplitude * 0.5;
+                    const noise3 = Math.sin((x + time * this.speed * 1.3 + this.offset) * 0.005) * this.amplitude * 2;
+                    const y = this.yBase + noise1 + noise2 + noise3;
+                    this.points.push({ x, y });
+                }
+            }
+            
+            draw() {
+                if (this.points.length < 2) return;
+                
+                ctx.beginPath();
+                ctx.moveTo(this.points[0].x, this.points[0].y);
+                
+                for (let i = 1; i < this.points.length; i++) {
+                    ctx.lineTo(this.points[i].x, this.points[i].y);
+                }
+                
+                ctx.strokeStyle = `rgba(45, 212, 191, ${this.opacity})`;
+                ctx.lineWidth = 1;
+                ctx.stroke();
+                
+                // Glow effect
+                ctx.strokeStyle = `rgba(45, 212, 191, ${this.opacity * 0.3})`;
+                ctx.lineWidth = 3;
+                ctx.stroke();
+            }
+        }
+        
+        // Grid lines (subtle)
+        function drawGrid() {
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.012)';
+            ctx.lineWidth = 0.5;
+            
+            // Horizontal
+            for (let y = 0; y < height; y += 100) {
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                ctx.lineTo(width, y);
+                ctx.stroke();
+            }
+            
+            // Vertical
+            for (let x = 0; x < width; x += 100) {
+                ctx.beginPath();
+                ctx.moveTo(x, 0);
+                ctx.lineTo(x, height);
+                ctx.stroke();
+            }
+        }
+        
+        let chartLines = [];
+        
+        function init() {
+            particles = [];
+            molecules = [];
+            chartLines = [];
+            
+            // Create CO2 molecules - fewer and more subtle
+            for (let i = 0; i < 8; i++) {
+                molecules.push(new CO2Molecule());
+            }
+            
+            // Create data particles - fewer
+            for (let i = 0; i < 30; i++) {
+                const p = new DataParticle();
+                p.y = Math.random() * height;
+                particles.push(p);
+            }
+            
+            // Create chart lines - more subtle
+            chartLines.push(new ChartLine(height * 0.3, 30, 30, 0.06));
+            chartLines.push(new ChartLine(height * 0.5, 40, 25, 0.04));
+            chartLines.push(new ChartLine(height * 0.7, 25, 35, 0.05));
+        }
+        
+        function animate() {
+            ctx.fillStyle = 'rgba(10, 10, 12, 0.1)';
+            ctx.fillRect(0, 0, width, height);
+            
+            time++;
+            
+            drawGrid();
+            
+            // Update and draw chart lines
+            chartLines.forEach(line => {
+                line.update();
+                line.draw();
+            });
+            
+            // Update and draw molecules
+            molecules.forEach(mol => {
+                mol.update();
+                mol.draw();
+            });
+            
+            // Update and draw particles
+            particles.forEach(p => {
+                p.update();
+                p.draw();
+            });
+            
+            requestAnimationFrame(animate);
+        }
+        
+        // Modal functions
+        function openModal(type) {
+            const modal = document.getElementById(type + 'Modal');
+            modal.classList.add('active');
+        }
+        
+        function closeModal(type) {
+            const modal = document.getElementById(type + 'Modal');
+            modal.classList.remove('active');
+        }
+        
+        function handleLogin(e) {
+            e.preventDefault();
+            // Handle login logic
+            console.log('Login submitted');
+            closeModal('login');
+        }
+        
+        function handleRegister(e) {
+            e.preventDefault();
+            // Handle registration logic
+            console.log('Registration submitted');
+            closeModal('register');
+        }
+        
+        // Close modal on overlay click
+        document.querySelectorAll('.modal-overlay').forEach(overlay => {
+            overlay.addEventListener('click', (e) => {
+                if (e.target === overlay) {
+                    overlay.classList.remove('active');
+                }
+            });
+        });
+        
+        // Close modal on Escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                document.querySelectorAll('.modal-overlay').forEach(modal => {
+                    modal.classList.remove('active');
+                });
+            }
+        });
+        
+        // Initialize
+        window.addEventListener('resize', resize);
+        resize();
+        animate();
+        
+        // ============================================
+        // ECOLOGY CANVAS - Artistic Growing Tree/Plant
+        // ============================================
+        const ecoCanvas = document.getElementById('ecologyCanvas');
+        const ecoCtx = ecoCanvas.getContext('2d');
+        
+        let ecoWidth, ecoHeight;
+        let branches = [];
+        let leaves = [];
+        let floatingParticles = [];
+        let ecoTime = 0;
+        
+        function ecoResize() {
+            ecoWidth = ecoCanvas.width = window.innerWidth;
+            ecoHeight = ecoCanvas.height = window.innerHeight;
+            initEcology();
+        }
+        
+        // Leaf particle
+        class Leaf {
+            constructor(x, y, size) {
+                this.x = x;
+                this.y = y;
+                this.originX = x;
+                this.originY = y;
+                this.size = size || 2 + Math.random() * 4;
+                this.angle = Math.random() * Math.PI * 2;
+                this.speed = 0.01 + Math.random() * 0.02;
+                this.amplitude = 5 + Math.random() * 10;
+                this.opacity = 0.2 + Math.random() * 0.4;
+                this.hue = 150 + Math.random() * 30; // Green spectrum
+                this.pulseSpeed = 0.02 + Math.random() * 0.02;
+                this.pulsePhase = Math.random() * Math.PI * 2;
+            }
+            
+            update() {
+                this.angle += this.speed;
+                this.pulsePhase += this.pulseSpeed;
+                this.x = this.originX + Math.sin(this.angle) * this.amplitude;
+                this.y = this.originY + Math.cos(this.angle * 0.7) * this.amplitude * 0.5;
+            }
+            
+            draw() {
+                const pulse = 1 + Math.sin(this.pulsePhase) * 0.3;
+                const gradient = ecoCtx.createRadialGradient(
+                    this.x, this.y, 0,
+                    this.x, this.y, this.size * pulse
+                );
+                gradient.addColorStop(0, `hsla(${this.hue}, 70%, 55%, ${this.opacity})`);
+                gradient.addColorStop(0.5, `hsla(${this.hue}, 60%, 45%, ${this.opacity * 0.5})`);
+                gradient.addColorStop(1, `hsla(${this.hue}, 50%, 35%, 0)`);
+                
+                ecoCtx.beginPath();
+                ecoCtx.arc(this.x, this.y, this.size * pulse * 2, 0, Math.PI * 2);
+                ecoCtx.fillStyle = gradient;
+                ecoCtx.fill();
+            }
+        }
+        
+        // Floating eco particle (spores/pollen)
+        class EcoParticle {
+            constructor() {
+                this.reset();
+            }
+            
+            reset() {
+                this.x = Math.random() * ecoWidth * 0.4; // Left side
+                this.y = ecoHeight + 10;
+                this.vx = 0.2 + Math.random() * 0.3;
+                this.vy = -0.3 - Math.random() * 0.5;
+                this.size = 1 + Math.random() * 2;
+                this.opacity = 0.1 + Math.random() * 0.25;
+                this.wobbleSpeed = 0.02 + Math.random() * 0.03;
+                this.wobbleAmp = 20 + Math.random() * 30;
+                this.phase = Math.random() * Math.PI * 2;
+                this.hue = 140 + Math.random() * 40;
+            }
+            
+            update() {
+                this.phase += this.wobbleSpeed;
+                this.x += this.vx + Math.sin(this.phase) * 0.5;
+                this.y += this.vy;
+                
+                if (this.y < -20 || this.x > ecoWidth * 0.6) {
+                    this.reset();
+                }
+            }
+            
+            draw() {
+                ecoCtx.beginPath();
+                ecoCtx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ecoCtx.fillStyle = `hsla(${this.hue}, 60%, 50%, ${this.opacity})`;
+                ecoCtx.fill();
+            }
+        }
+        
+        // Organic branch/vine structure
+        class Branch {
+            constructor(startX, startY, angle, length, depth, maxDepth) {
+                this.startX = startX;
+                this.startY = startY;
+                this.angle = angle;
+                this.length = length;
+                this.depth = depth;
+                this.maxDepth = maxDepth;
+                this.progress = 0;
+                this.growSpeed = 0.008 + Math.random() * 0.005;
+                this.children = [];
+                this.hasSpawned = false;
+                this.swayPhase = Math.random() * Math.PI * 2;
+                this.swaySpeed = 0.01 + Math.random() * 0.01;
+                this.swayAmount = 0.02 + Math.random() * 0.03;
+            }
+            
+            update() {
+                if (this.progress < 1) {
+                    this.progress += this.growSpeed;
+                }
+                
+                this.swayPhase += this.swaySpeed;
+                
+                // Spawn children when grown enough
+                if (this.progress > 0.7 && !this.hasSpawned && this.depth < this.maxDepth) {
+                    this.hasSpawned = true;
+                    const endX = this.getEndX();
+                    const endY = this.getEndY();
+                    
+                    // Create 2-3 child branches
+                    const numChildren = 2 + Math.floor(Math.random() * 2);
+                    for (let i = 0; i < numChildren; i++) {
+                        const newAngle = this.angle + (Math.random() - 0.5) * 1.2;
+                        const newLength = this.length * (0.6 + Math.random() * 0.3);
+                        const child = new Branch(endX, endY, newAngle, newLength, this.depth + 1, this.maxDepth);
+                        this.children.push(child);
+                        branches.push(child);
+                        
+                        // Add leaves at branch ends
+                        if (this.depth >= this.maxDepth - 2) {
+                            for (let j = 0; j < 3 + Math.floor(Math.random() * 4); j++) {
+                                const leafX = endX + (Math.random() - 0.5) * 30;
+                                const leafY = endY + (Math.random() - 0.5) * 30;
+                                leaves.push(new Leaf(leafX, leafY));
+                            }
+                        }
+                    }
+                }
+                
+                this.children.forEach(c => c.update());
+            }
+            
+            getCurrentAngle() {
+                return this.angle + Math.sin(this.swayPhase) * this.swayAmount;
+            }
+            
+            getEndX() {
+                return this.startX + Math.cos(this.getCurrentAngle()) * this.length * this.progress;
+            }
+            
+            getEndY() {
+                return this.startY + Math.sin(this.getCurrentAngle()) * this.length * this.progress;
+            }
+            
+            draw() {
+                if (this.progress <= 0) return;
+                
+                const endX = this.getEndX();
+                const endY = this.getEndY();
+                
+                // Branch thickness based on depth
+                const thickness = Math.max(0.5, (this.maxDepth - this.depth) * 1.5) * this.progress;
+                
+                // Draw branch
+                ecoCtx.beginPath();
+                ecoCtx.moveTo(this.startX, this.startY);
+                
+                // Slight curve for organic feel
+                const midX = (this.startX + endX) / 2 + Math.sin(this.swayPhase * 2) * 5;
+                const midY = (this.startY + endY) / 2;
+                ecoCtx.quadraticCurveTo(midX, midY, endX, endY);
+                
+                const opacity = 0.15 + (this.depth / this.maxDepth) * 0.15;
+                const hue = 150 + this.depth * 5;
+                ecoCtx.strokeStyle = `hsla(${hue}, 50%, 40%, ${opacity})`;
+                ecoCtx.lineWidth = thickness;
+                ecoCtx.lineCap = 'round';
+                ecoCtx.stroke();
+                
+                // Glow effect for main branches
+                if (this.depth < 3) {
+                    ecoCtx.strokeStyle = `hsla(${hue}, 60%, 45%, ${opacity * 0.3})`;
+                    ecoCtx.lineWidth = thickness * 3;
+                    ecoCtx.stroke();
+                }
+            }
+        }
+        
+        function initEcology() {
+            branches = [];
+            leaves = [];
+            floatingParticles = [];
+            
+            // Create main trunk from bottom left
+            const startX = ecoWidth * 0.08;
+            const startY = ecoHeight * 0.95;
+            const mainAngle = -Math.PI / 2 + 0.3; // Upward with slight rightward lean
+            const mainLength = ecoHeight * 0.25;
+            
+            const trunk = new Branch(startX, startY, mainAngle, mainLength, 0, 6);
+            branches.push(trunk);
+            
+            // Add some initial leaves at base
+            for (let i = 0; i < 10; i++) {
+                const lx = startX + Math.random() * 40;
+                const ly = startY - Math.random() * 50;
+                leaves.push(new Leaf(lx, ly, 3 + Math.random() * 3));
+            }
+            
+            // Create floating particles
+            for (let i = 0; i < 25; i++) {
+                const p = new EcoParticle();
+                p.y = Math.random() * ecoHeight;
+                floatingParticles.push(p);
+            }
+        }
+        
+        function animateEcology() {
+            ecoCtx.clearRect(0, 0, ecoWidth, ecoHeight);
+            
+            ecoTime++;
+            
+            // Update and draw branches
+            branches.forEach(b => {
+                b.update();
+                b.draw();
+            });
+            
+            // Update and draw leaves
+            leaves.forEach(leaf => {
+                leaf.update();
+                leaf.draw();
+            });
+            
+            // Update and draw floating particles
+            floatingParticles.forEach(p => {
+                p.update();
+                p.draw();
+            });
+            
+            // Draw subtle energy lines connecting to the tree
+            drawEnergyFlow();
+            
+            requestAnimationFrame(animateEcology);
+        }
+        
+        function drawEnergyFlow() {
+            // Subtle flowing lines representing life/energy
+            for (let i = 0; i < 3; i++) {
+                const baseY = ecoHeight * (0.7 + i * 0.1);
+                ecoCtx.beginPath();
+                ecoCtx.moveTo(0, baseY);
+                
+                for (let x = 0; x < ecoWidth * 0.3; x += 5) {
+                    const y = baseY + Math.sin((x + ecoTime * 0.5 + i * 100) * 0.02) * 15;
+                    ecoCtx.lineTo(x, y);
+                }
+                
+                const gradient = ecoCtx.createLinearGradient(0, baseY, ecoWidth * 0.3, baseY);
+                gradient.addColorStop(0, 'hsla(160, 50%, 40%, 0.08)');
+                gradient.addColorStop(0.5, 'hsla(150, 60%, 45%, 0.04)');
+                gradient.addColorStop(1, 'hsla(140, 50%, 40%, 0)');
+                
+                ecoCtx.strokeStyle = gradient;
+                ecoCtx.lineWidth = 1;
+                ecoCtx.stroke();
+            }
+        }
+        
+        window.addEventListener('resize', ecoResize);
+        ecoResize();
+        animateEcology();
+    </script>
+
+
+</body></html>

@@ -1,0 +1,49 @@
+{
+  "name": "@co2-trading-platform/design-system-theme",
+  "version": "1.0.0",
+  "description": "Complete design system theme tokens for CO2 Trading Platform. Portable and reusable across applications.",
+  "main": "design-system-theme.ts",
+  "types": "design-system-theme.ts",
+  "files": [
+    "design-system-theme.json",
+    "design-system-theme.ts",
+    "design-system-theme.schema.json",
+    "DESIGN_SYSTEM_THEME_README.md"
+  ],
+  "keywords": [
+    "design-system",
+    "theme",
+    "tokens",
+    "colors",
+    "typography",
+    "spacing",
+    "tailwind",
+    "css-variables"
+  ],
+  "author": "CO2 Trading Platform",
+  "license": "UNLICENSED",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/co2-trading-platform/co2-trading-final.git",
+    "directory": "."
+  },
+  "exports": {
+    ".": {
+      "types": "./design-system-theme.ts",
+      "import": "./design-system-theme.ts",
+      "require": "./design-system-theme.json"
+    },
+    "./json": "./design-system-theme.json",
+    "./schema": "./design-system-theme.schema.json"
+  },
+  "scripts": {
+    "validate": "node scripts/validate-theme.js"
+  },
+  "devDependencies": {
+    "typescript": "^5.8.3"
+  },
+  "peerDependencies": {
+    "typescript": ">=4.0.0"
+  }
+}
+

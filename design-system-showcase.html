@@ -1,0 +1,2437 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CO2 Trading Platform - Design System Showcase</title>
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Heroicons via CDN -->
+  <script src="https://unpkg.com/@heroicons/react@2.0.18/24/outline/index.js" type="module"></script>
+  
+  <style>
+    /* Import Google Fonts - Inter */
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+    
+    /* CSS Variables - Light Theme */
+    :root {
+      /* Primary Colors */
+      --color-primary-50: #eef2ff;
+      --color-primary-100: #e0e7ff;
+      --color-primary-200: #c7d2fe;
+      --color-primary-300: #a5b4fc;
+      --color-primary-400: #818cf8;
+      --color-primary-500: #6366f1;
+      --color-primary-600: #4f46e5;
+      --color-primary-700: #4338ca;
+      --color-primary-800: #3730a3;
+      --color-primary-900: #312e81;
+      --color-primary-950: #1e1b4b;
+      
+      /* Secondary Colors */
+      --color-secondary-50: #f0fdfa;
+      --color-secondary-100: #ccfbf1;
+      --color-secondary-200: #99f6e4;
+      --color-secondary-300: #5eead4;
+      --color-secondary-400: #2dd4bf;
+      --color-secondary-500: #14b8a6;
+      --color-secondary-600: #0d9488;
+      --color-secondary-700: #0f766e;
+      --color-secondary-800: #115e59;
+      --color-secondary-900: #134e4a;
+      --color-secondary-950: #042f2e;
+      
+      /* Semantic Colors */
+      --color-success-light: #10b981;
+      --color-success: #059669;
+      --color-success-dark: #047857;
+      
+      --color-error-light: #ef4444;
+      --color-error: #dc2626;
+      --color-error-dark: #b91c1c;
+      
+      --color-warning-light: #f59e0b;
+      --color-warning: #d97706;
+      --color-warning-dark: #b45309;
+      
+      --color-info-light: #3b82f6;
+      --color-info: #2563eb;
+      --color-info-dark: #1d4ed8;
+      
+      /* Neutral Colors */
+      --color-neutral-50: #f9fafb;
+      --color-neutral-100: #f3f4f6;
+      --color-neutral-200: #e5e7eb;
+      --color-neutral-300: #d1d5db;
+      --color-neutral-400: #9ca3af;
+      --color-neutral-500: #6b7280;
+      --color-neutral-600: #4b5563;
+      --color-neutral-700: #374151;
+      --color-neutral-800: #1f2937;
+      --color-neutral-900: #111827;
+      --color-neutral-950: #030712;
+      
+      /* Functional Colors - Light */
+      --color-background: #ffffff;
+      --color-background-secondary: #f9fafb;
+      --color-text-primary: #111827;
+      --color-text-secondary: #6b7280;
+      --color-text-muted: #9ca3af;
+      --color-border: #e5e7eb;
+      
+      /* Typography */
+      --font-family-sans: 'Inter', system-ui, Avenir, Helvetica, Arial, sans-serif;
+      --font-family-mono: Menlo, Monaco, 'Courier New', monospace;
+      
+      /* Shadows */
+      --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+      --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+      --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+      --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+      --shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+      --shadow-colored-primary: 0 0 0 3px rgba(79, 70, 229, 0.1);
+      --shadow-colored-secondary: 0 0 0 3px rgba(20, 184, 166, 0.1);
+      --shadow-colored-success: 0 0 0 3px rgba(16, 185, 129, 0.1);
+      --shadow-colored-error: 0 0 0 3px rgba(239, 68, 68, 0.1);
+      
+      /* Borders */
+      --border-radius-sm: 0.125rem;
+      --border-radius-md: 0.375rem;
+      --border-radius-lg: 0.5rem;
+      --border-radius-xl: 0.75rem;
+      --border-radius-2xl: 1rem;
+      --border-radius-full: 9999px;
+      
+      /* Transitions */
+      --transition-default: all 200ms ease-in-out;
+      --transition-colors: color 200ms ease-in-out, background-color 200ms ease-in-out, border-color 200ms ease-in-out;
+    }
+    
+    /* Dark Theme */
+    .dark {
+      --color-background: #12121a;
+      --color-background-secondary: #0a0a0f;
+      --color-text-primary: #f9fafb;
+      --color-text-secondary: #9ca3af;
+      --color-text-muted: rgba(255, 255, 255, 0.4);
+      --color-border: rgba(255, 255, 255, 0.12);
+      
+      --shadow-md: 0 4px 6px -1px rgba(17, 24, 39, 0.5);
+      --shadow-lg: 0 10px 15px -3px rgba(17, 24, 39, 0.7);
+    }
+    
+    body {
+      font-family: var(--font-family-sans);
+      background-color: var(--color-background);
+      color: var(--color-text-primary);
+      transition: var(--transition-colors);
+    }
+    
+    /* Component Classes */
+    
+    /* Button */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: var(--border-radius-md);
+      font-weight: 500;
+      transition: var(--transition-colors);
+      outline: none;
+      border: none;
+      cursor: pointer;
+    }
+    
+    .btn:focus {
+      outline: 2px solid transparent;
+      outline-offset: 2px;
+      box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+    }
+    
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    
+    .btn-sm { padding: 0.5rem 1rem; font-size: 0.875rem; }
+    .btn-md { padding: 0.625rem 1.25rem; font-size: 1rem; }
+    .btn-lg { padding: 0.75rem 1.5rem; font-size: 1.125rem; }
+    
+    .btn-primary {
+      background-color: var(--color-primary-600);
+      color: white;
+    }
+    
+    .btn-primary:hover:not(:disabled) {
+      background-color: var(--color-primary-700);
+    }
+    
+    .btn-secondary {
+      background-color: var(--color-secondary-600);
+      color: white;
+    }
+    
+    .btn-secondary:hover:not(:disabled) {
+      background-color: var(--color-secondary-700);
+    }
+    
+    .btn-outline {
+      border: 2px solid var(--color-primary-600);
+      background-color: transparent;
+      color: var(--color-primary-600);
+    }
+    
+    .btn-outline:hover:not(:disabled) {
+      background-color: var(--color-primary-50);
+    }
+    
+    .dark .btn-outline:hover:not(:disabled) {
+      background-color: rgba(79, 70, 229, 0.2);
+    }
+    
+    .btn-ghost {
+      background-color: transparent;
+      color: var(--color-primary-600);
+    }
+    
+    .btn-ghost:hover:not(:disabled) {
+      background-color: var(--color-primary-50);
+    }
+    
+    .dark .btn-ghost:hover:not(:disabled) {
+      background-color: rgba(79, 70, 229, 0.2);
+    }
+    
+    .btn-danger {
+      background-color: var(--color-error);
+      color: white;
+    }
+    
+    .btn-danger:hover:not(:disabled) {
+      background-color: var(--color-error-dark);
+    }
+    
+    .btn-success {
+      background-color: var(--color-success);
+      color: white;
+    }
+    
+    .btn-success:hover:not(:disabled) {
+      background-color: var(--color-success-dark);
+    }
+    
+    .btn-info {
+      background-color: var(--color-info);
+      color: white;
+    }
+    
+    .btn-info:hover:not(:disabled) {
+      background-color: var(--color-info-dark);
+    }
+    
+    /* Card */
+    .card-base {
+      background-color: var(--color-background);
+      border-radius: var(--border-radius-lg);
+      box-shadow: var(--shadow-md);
+    }
+    
+    .dark .card-base {
+      box-shadow: 0 4px 6px -1px rgba(17, 24, 39, 0.5);
+    }
+    
+    .card-default {
+      border: 1px solid var(--color-border);
+    }
+    
+    .card-elevated {
+      box-shadow: var(--shadow-lg);
+    }
+    
+    .card-outlined {
+      border: 2px solid var(--color-border);
+    }
+    
+    .card-padding-sm { padding: 1rem; }
+    .card-padding-md { padding: 1.5rem; }
+    .card-padding-lg { padding: 2rem; }
+    
+    .card-hover {
+      transition: box-shadow 200ms ease-in-out;
+    }
+    
+    .card-hover:hover {
+      box-shadow: var(--shadow-lg);
+    }
+    
+    /* Badge */
+    .badge-base {
+      display: inline-flex;
+      align-items: center;
+      border-radius: var(--border-radius-full);
+      font-weight: 500;
+    }
+    
+    .badge-sm { padding: 0.125rem 0.5rem; font-size: 0.75rem; }
+    .badge-md { padding: 0.125rem 0.625rem; font-size: 0.875rem; }
+    .badge-lg { padding: 0.25rem 0.75rem; font-size: 1rem; }
+    
+    .badge-primary {
+      background-color: var(--color-primary-100);
+      color: var(--color-primary-800);
+    }
+    
+    .dark .badge-primary {
+      background-color: var(--color-primary-900);
+      color: var(--color-primary-200);
+    }
+    
+    .badge-secondary {
+      background-color: var(--color-secondary-100);
+      color: var(--color-secondary-800);
+    }
+    
+    .dark .badge-secondary {
+      background-color: var(--color-secondary-900);
+      color: var(--color-secondary-200);
+    }
+    
+    .badge-success {
+      background-color: rgba(16, 185, 129, 0.2);
+      color: var(--color-success-dark);
+    }
+    
+    .dark .badge-success {
+      background-color: rgba(4, 120, 87, 0.3);
+      color: var(--color-success-light);
+    }
+    
+    .badge-error {
+      background-color: rgba(239, 68, 68, 0.2);
+      color: var(--color-error-dark);
+    }
+    
+    .dark .badge-error {
+      background-color: rgba(185, 28, 28, 0.3);
+      color: var(--color-error-light);
+    }
+    
+    .badge-warning {
+      background-color: rgba(245, 158, 11, 0.2);
+      color: var(--color-warning-dark);
+    }
+    
+    .dark .badge-warning {
+      background-color: rgba(180, 83, 9, 0.3);
+      color: var(--color-warning-light);
+    }
+    
+    .badge-info {
+      background-color: rgba(59, 130, 246, 0.2);
+      color: var(--color-info-dark);
+    }
+    
+    .dark .badge-info {
+      background-color: rgba(29, 78, 216, 0.3);
+      color: var(--color-info-light);
+    }
+    
+    .badge-dot {
+      width: 0.5rem;
+      height: 0.5rem;
+      border-radius: 50%;
+      margin-right: 0.25rem;
+    }
+    
+    /* Input */
+    .input-base {
+      display: block;
+      width: 100%;
+      border-radius: var(--border-radius-md);
+      border: 1px solid var(--color-border);
+      background-color: var(--color-background);
+      color: var(--color-text-primary);
+      padding: 0.625rem 1rem;
+      transition: var(--transition-colors);
+    }
+    
+    .input-base:focus {
+      outline: none;
+      border-color: var(--color-primary-500);
+      box-shadow: var(--shadow-colored-primary);
+    }
+    
+    .input-base:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    
+    .input-error {
+      border-color: var(--color-error);
+    }
+    
+    .input-error:focus {
+      border-color: var(--color-error);
+      box-shadow: var(--shadow-colored-error);
+    }
+    
+    .input-label {
+      display: block;
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: var(--color-text-primary);
+      margin-bottom: 0.25rem;
+    }
+    
+    .input-error-text {
+      display: block;
+      font-size: 0.875rem;
+      color: var(--color-error);
+      margin-top: 0.25rem;
+    }
+    
+    .input-helper-text {
+      display: block;
+      font-size: 0.875rem;
+      color: var(--color-text-secondary);
+      margin-top: 0.25rem;
+    }
+    
+    /* Table */
+    .table-wrapper {
+      overflow-x: auto;
+    }
+    
+    .table-base {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    
+    .table-header {
+      padding: 0.75rem 1rem;
+      text-align: left;
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: var(--color-text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      border-bottom: 1px solid var(--color-border);
+    }
+    
+    .table-cell {
+      padding: 0.75rem 1rem;
+      font-size: 0.875rem;
+      color: var(--color-text-primary);
+      border-bottom: 1px solid var(--color-border);
+    }
+    
+    .table-striped tbody tr:nth-child(even) {
+      background-color: var(--color-background-secondary);
+    }
+    
+    .table-hover tbody tr:hover {
+      background-color: var(--color-background-secondary);
+    }
+    
+    /* Utility Classes */
+    .text-label {
+      font-size: 0.7rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+    }
+    
+    .text-display {
+      font-size: 3.5rem;
+      line-height: 1.1;
+      letter-spacing: -0.1em;
+    }
+    
+    .section {
+      margin-bottom: 3rem;
+      padding: 2rem;
+      background-color: var(--color-background-secondary);
+      border-radius: var(--border-radius-lg);
+    }
+    
+    .dark .section {
+      background-color: rgba(255, 255, 255, 0.05);
+    }
+    
+    .color-swatch {
+      width: 100%;
+      height: 80px;
+      border-radius: var(--border-radius-md);
+      margin-bottom: 0.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: 600;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+    }
+    
+    .color-swatch.light {
+      color: var(--color-text-primary);
+      text-shadow: none;
+    }
+    
+    .theme-toggle {
+      position: fixed;
+      top: 1rem;
+      right: 1rem;
+      z-index: 1000;
+      padding: 0.75rem 1.25rem;
+      background-color: var(--color-primary-600);
+      color: white;
+      border: none;
+      border-radius: var(--border-radius-md);
+      cursor: pointer;
+      font-weight: 500;
+      box-shadow: var(--shadow-md);
+      transition: var(--transition-colors);
+    }
+    
+    .theme-toggle:hover {
+      background-color: var(--color-primary-700);
+    }
+    
+    .code-block {
+      background-color: var(--color-neutral-900);
+      color: var(--color-neutral-100);
+      padding: 1rem;
+      border-radius: var(--border-radius-md);
+      font-family: var(--font-family-mono);
+      font-size: 0.875rem;
+      overflow-x: auto;
+      margin-top: 1rem;
+    }
+    
+    .dark .code-block {
+      background-color: var(--color-neutral-800);
+    }
+    
+    h1, h2, h3 {
+      margin-bottom: 1rem;
+      font-weight: 600;
+    }
+    
+    h1 { font-size: 2.25rem; }
+    h2 { font-size: 1.875rem; }
+    h3 { font-size: 1.5rem; }
+    
+    .grid-colors {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+    
+    .spacing-demo {
+      background-color: var(--color-primary-200);
+      margin-bottom: 0.5rem;
+      color: var(--color-primary-900);
+      font-weight: 500;
+      text-align: center;
+      padding: 0.5rem;
+      border-radius: var(--border-radius-sm);
+    }
+    
+    .dark .spacing-demo {
+      background-color: var(--color-primary-800);
+      color: var(--color-primary-200);
+    }
+  </style>
+</head>
+<body>
+  <button class="theme-toggle" onclick="toggleTheme()">🌓 Toggle Dark Mode</button>
+  
+  <div class="container mx-auto px-4 py-8 max-w-7xl">
+    <header class="mb-12 text-center">
+      <h1 class="text-4xl font-bold mb-4">CO2 Trading Platform</h1>
+      <h2 class="text-2xl text-text-secondary">Design System Showcase</h2>
+      <p class="mt-4 text-text-muted">Tema grafică completă, clase CSS, componente și librării</p>
+    </header>
+    
+    <!-- Libraries Section -->
+    <section id="libraries" class="section">
+      <h2>📚 Librării și Tehnologii</h2>
+      <p class="text-text-secondary mb-6">Proiectul utilizează un stack modern de tehnologii pentru a oferi o experiență de dezvoltare și utilizare optimă.</p>
+      
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
+        <div class="card-base card-default card-padding-md card-hover">
+          <h3 class="font-semibold mb-2 flex items-center">
+            <span class="text-2xl mr-2">⚛️</span>
+            React
+          </h3>
+          <p class="text-sm text-text-secondary mb-2">v18.2.0 - Framework UI declarativ</p>
+          <ul class="text-xs text-text-muted space-y-1">
+            <li>• Hooks pentru state management</li>
+            <li>• Component-based architecture</li>
+            <li>• Virtual DOM pentru performanță</li>
+          </ul>
+          <div class="mt-3">
+            <code class="text-xs bg-neutral-100 dark:bg-neutral-800 px-2 py-1 rounded">npm install react@18.2.0</code>
+          </div>
+        </div>
+        
+        <div class="card-base card-default card-padding-md card-hover">
+          <h3 class="font-semibold mb-2 flex items-center">
+            <span class="text-2xl mr-2">🎨</span>
+            Tailwind CSS
+          </h3>
+          <p class="text-sm text-text-secondary mb-2">v3.3.5 - Utility-first CSS framework</p>
+          <ul class="text-xs text-text-muted space-y-1">
+            <li>• Clase utility pentru styling rapid</li>
+            <li>• PurgeCSS pentru bundle size optim</li>
+            <li>• Dark mode support built-in</li>
+          </ul>
+          <div class="mt-3">
+            <code class="text-xs bg-neutral-100 dark:bg-neutral-800 px-2 py-1 rounded">npm install tailwindcss@3.3.5</code>
+          </div>
+        </div>
+        
+        <div class="card-base card-default card-padding-md card-hover">
+          <h3 class="font-semibold mb-2 flex items-center">
+            <span class="text-2xl mr-2">📘</span>
+            TypeScript
+          </h3>
+          <p class="text-sm text-text-secondary mb-2">v5.8.3 - Type safety și IntelliSense</p>
+          <ul class="text-xs text-text-muted space-y-1">
+            <li>• Type checking la compile time</li>
+            <li>• Autocomplete îmbunătățit</li>
+            <li>• Refactoring sigur</li>
+          </ul>
+          <div class="mt-3">
+            <code class="text-xs bg-neutral-100 dark:bg-neutral-800 px-2 py-1 rounded">npm install -D typescript@5.8.3</code>
+          </div>
+        </div>
+        
+        <div class="card-base card-default card-padding-md card-hover">
+          <h3 class="font-semibold mb-2 flex items-center">
+            <span class="text-2xl mr-2">🧩</span>
+            Headless UI
+          </h3>
+          <p class="text-sm text-text-secondary mb-2">v1.7.17 - Componente unstyled, accessible</p>
+          <ul class="text-xs text-text-muted space-y-1">
+            <li>• Componente fără stiluri predefinite</li>
+            <li>• Accesibilitate completă (ARIA)</li>
+            <li>• Keyboard navigation</li>
+          </ul>
+          <div class="mt-3">
+            <code class="text-xs bg-neutral-100 dark:bg-neutral-800 px-2 py-1 rounded">npm install @headlessui/react@1.7.17</code>
+          </div>
+        </div>
+        
+        <div class="card-base card-default card-padding-md card-hover">
+          <h3 class="font-semibold mb-2 flex items-center">
+            <span class="text-2xl mr-2">🎯</span>
+            Heroicons
+          </h3>
+          <p class="text-sm text-text-secondary mb-2">v2.0.18 - Biblioteca de icoane SVG</p>
+          <ul class="text-xs text-text-muted space-y-1">
+            <li>• Outline și solid variants</li>
+            <li>• Optimizate pentru React</li>
+            <li>• Tree-shakeable</li>
+          </ul>
+          <div class="mt-3">
+            <code class="text-xs bg-neutral-100 dark:bg-neutral-800 px-2 py-1 rounded">npm install @heroicons/react@2.0.18</code>
+          </div>
+        </div>
+        
+        <div class="card-base card-default card-padding-md card-hover">
+          <h3 class="font-semibold mb-2 flex items-center">
+            <span class="text-2xl mr-2">📊</span>
+            Chart.js
+          </h3>
+          <p class="text-sm text-text-secondary mb-2">v4.4.0 - Visualizare date și grafice</p>
+          <ul class="text-xs text-text-muted space-y-1">
+            <li>• React wrapper disponibil</li>
+            <li>• Multiple chart types</li>
+            <li>• Animații și interacțiuni</li>
+          </ul>
+          <div class="mt-3">
+            <code class="text-xs bg-neutral-100 dark:bg-neutral-800 px-2 py-1 rounded">npm install chart.js@4.4.0 react-chartjs-2@5.2.0</code>
+          </div>
+        </div>
+        
+        <div class="card-base card-default card-padding-md card-hover">
+          <h3 class="font-semibold mb-2 flex items-center">
+            <span class="text-2xl mr-2">🛣️</span>
+            React Router
+          </h3>
+          <p class="text-sm text-text-secondary mb-2">v6.20.0 - Routing pentru SPA</p>
+          <ul class="text-xs text-text-muted space-y-1">
+            <li>• Declarative routing</li>
+            <li>• Nested routes</li>
+            <li>• Code splitting</li>
+          </ul>
+          <div class="mt-3">
+            <code class="text-xs bg-neutral-100 dark:bg-neutral-800 px-2 py-1 rounded">npm install react-router-dom@6.20.0</code>
+          </div>
+        </div>
+        
+        <div class="card-base card-default card-padding-md card-hover">
+          <h3 class="font-semibold mb-2 flex items-center">
+            <span class="text-2xl mr-2">🌍</span>
+            i18next
+          </h3>
+          <p class="text-sm text-text-secondary mb-2">v25.1.2 - Internaționalizare</p>
+          <ul class="text-xs text-text-muted space-y-1">
+            <li>• Multi-language support</li>
+            <li>• Language detection</li>
+            <li>• Pluralization</li>
+          </ul>
+          <div class="mt-3">
+            <code class="text-xs bg-neutral-100 dark:bg-neutral-800 px-2 py-1 rounded">npm install i18next@25.1.2 react-i18next@15.5.1</code>
+          </div>
+        </div>
+        
+        <div class="card-base card-default card-padding-md card-hover">
+          <h3 class="font-semibold mb-2 flex items-center">
+            <span class="text-2xl mr-2">🌐</span>
+            Axios
+          </h3>
+          <p class="text-sm text-text-secondary mb-2">v1.6.2 - HTTP client pentru API calls</p>
+          <ul class="text-xs text-text-muted space-y-1">
+            <li>• Request/Response interceptors</li>
+            <li>• Automatic JSON parsing</li>
+            <li>• Promise-based API</li>
+          </ul>
+          <div class="mt-3">
+            <code class="text-xs bg-neutral-100 dark:bg-neutral-800 px-2 py-1 rounded">npm install axios@1.6.2</code>
+          </div>
+        </div>
+        
+        <div class="card-base card-default card-padding-md card-hover">
+          <h3 class="font-semibold mb-2 flex items-center">
+            <span class="text-2xl mr-2">🔧</span>
+            Class Variance Authority
+          </h3>
+          <p class="text-sm text-text-secondary mb-2">v0.7.1 - Variante de componente</p>
+          <ul class="text-xs text-text-muted space-y-1">
+            <li>• Type-safe variant API</li>
+            <li>• Conditional classes</li>
+            <li>• Component composition</li>
+          </ul>
+          <div class="mt-3">
+            <code class="text-xs bg-neutral-100 dark:bg-neutral-800 px-2 py-1 rounded">npm install class-variance-authority@0.7.1</code>
+          </div>
+        </div>
+        
+        <div class="card-base card-default card-padding-md card-hover">
+          <h3 class="font-semibold mb-2 flex items-center">
+            <span class="text-2xl mr-2">🔀</span>
+            Tailwind Merge
+          </h3>
+          <p class="text-sm text-text-secondary mb-2">v3.4.0 - Merge Tailwind classes</p>
+          <ul class="text-xs text-text-muted space-y-1">
+            <li>• Inteligent class merging</li>
+            <li>• Conflict resolution</li>
+            <li>• Performance optimizat</li>
+          </ul>
+          <div class="mt-3">
+            <code class="text-xs bg-neutral-100 dark:bg-neutral-800 px-2 py-1 rounded">npm install tailwind-merge@3.4.0</code>
+          </div>
+        </div>
+        
+        <div class="card-base card-default card-padding-md card-hover">
+          <h3 class="font-semibold mb-2 flex items-center">
+            <span class="text-2xl mr-2">📅</span>
+            date-fns
+          </h3>
+          <p class="text-sm text-text-secondary mb-2">v2.30.0 - Manipulare date</p>
+          <ul class="text-xs text-text-muted space-y-1">
+            <li>• Formatare date</li>
+            <li>• Timezone support</li>
+            <li>• Tree-shakeable</li>
+          </ul>
+          <div class="mt-3">
+            <code class="text-xs bg-neutral-100 dark:bg-neutral-800 px-2 py-1 rounded">npm install date-fns@2.30.0</code>
+          </div>
+        </div>
+      </div>
+      
+      <div class="mt-6 card-base card-elevated card-padding-lg">
+        <h3 class="font-semibold mb-4">📦 Instalare Completă</h3>
+        <div class="code-block">
+npm install react@18.2.0 react-dom@18.2.0
+npm install -D typescript@5.8.3 @types/react@18.2.0 @types/react-dom@18.2.0
+npm install tailwindcss@3.3.5 postcss@8.4.31 autoprefixer@10.4.16
+npm install @headlessui/react@1.7.17 @heroicons/react@2.0.18
+npm install react-router-dom@6.20.0
+npm install axios@1.6.2
+npm install i18next@25.1.2 react-i18next@15.5.1 i18next-browser-languagedetector@8.1.0
+npm install chart.js@4.4.0 react-chartjs-2@5.2.0 chartjs-plugin-annotation@3.1.0
+npm install class-variance-authority@0.7.1 clsx@2.1.1 tailwind-merge@3.4.0
+npm install date-fns@2.30.0 uuid@9.0.1 @types/uuid@9.0.7
+npm install @tailwindcss/forms@0.5.7
+        </div>
+      </div>
+    </section>
+    
+    <!-- Colors Section -->
+    <section id="colors" class="section">
+      <h2>🎨 Culori</h2>
+      
+      <h3 class="mt-6 mb-4">Primary Colors</h3>
+      <div class="grid-colors">
+        <div>
+          <div class="color-swatch" style="background-color: var(--color-primary-50); color: var(--color-text-primary);">50</div>
+          <p class="text-sm text-center">primary-50</p>
+        </div>
+        <div>
+          <div class="color-swatch" style="background-color: var(--color-primary-100); color: var(--color-text-primary);">100</div>
+          <p class="text-sm text-center">primary-100</p>
+        </div>
+        <div>
+          <div class="color-swatch" style="background-color: var(--color-primary-200); color: var(--color-text-primary);">200</div>
+          <p class="text-sm text-center">primary-200</p>
+        </div>
+        <div>
+          <div class="color-swatch" style="background-color: var(--color-primary-300);">300</div>
+          <p class="text-sm text-center">primary-300</p>
+        </div>
+        <div>
+          <div class="color-swatch" style="background-color: var(--color-primary-400);">400</div>
+          <p class="text-sm text-center">primary-400</p>
+        </div>
+        <div>
+          <div class="color-swatch" style="background-color: var(--color-primary-500);">500</div>
+          <p class="text-sm text-center">primary-500</p>
+        </div>
+        <div>
+          <div class="color-swatch" style="background-color: var(--color-primary-600);">600</div>
+          <p class="text-sm text-center">primary-600</p>
+        </div>
+        <div>
+          <div class="color-swatch" style="background-color: var(--color-primary-700);">700</div>
+          <p class="text-sm text-center">primary-700</p>
+        </div>
+        <div>
+          <div class="color-swatch" style="background-color: var(--color-primary-800);">800</div>
+          <p class="text-sm text-center">primary-800</p>
+        </div>
+        <div>
+          <div class="color-swatch" style="background-color: var(--color-primary-900);">900</div>
+          <p class="text-sm text-center">primary-900</p>
+        </div>
+        <div>
+          <div class="color-swatch" style="background-color: var(--color-primary-950);">950</div>
+          <p class="text-sm text-center">primary-950</p>
+        </div>
+      </div>
+      
+      <h3 class="mt-6 mb-4">Secondary Colors</h3>
+      <div class="grid-colors">
+        <div>
+          <div class="color-swatch" style="background-color: var(--color-secondary-50); color: var(--color-text-primary);">50</div>
+          <p class="text-sm text-center">secondary-50</p>
+        </div>
+        <div>
+          <div class="color-swatch" style="background-color: var(--color-secondary-100); color: var(--color-text-primary);">100</div>
+          <p class="text-sm text-center">secondary-100</p>
+        </div>
+        <div>
+          <div class="color-swatch" style="background-color: var(--color-secondary-200); color: var(--color-text-primary);">200</div>
+          <p class="text-sm text-center">secondary-200</p>
+        </div>
+        <div>
+          <div class="color-swatch" style="background-color: var(--color-secondary-300);">300</div>
+          <p class="text-sm text-center">secondary-300</p>
+        </div>
+        <div>
+          <div class="color-swatch" style="background-color: var(--color-secondary-400);">400</div>
+          <p class="text-sm text-center">secondary-400</p>
+        </div>
+        <div>
+          <div class="color-swatch" style="background-color: var(--color-secondary-500);">500</div>
+          <p class="text-sm text-center">secondary-500</p>
+        </div>
+        <div>
+          <div class="color-swatch" style="background-color: var(--color-secondary-600);">600</div>
+          <p class="text-sm text-center">secondary-600</p>
+        </div>
+        <div>
+          <div class="color-swatch" style="background-color: var(--color-secondary-700);">700</div>
+          <p class="text-sm text-center">secondary-700</p>
+        </div>
+        <div>
+          <div class="color-swatch" style="background-color: var(--color-secondary-800);">800</div>
+          <p class="text-sm text-center">secondary-800</p>
+        </div>
+        <div>
+          <div class="color-swatch" style="background-color: var(--color-secondary-900);">900</div>
+          <p class="text-sm text-center">secondary-900</p>
+        </div>
+        <div>
+          <div class="color-swatch" style="background-color: var(--color-secondary-950);">950</div>
+          <p class="text-sm text-center">secondary-950</p>
+        </div>
+      </div>
+      
+      <h3 class="mt-6 mb-4">Semantic Colors</h3>
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div>
+          <div class="color-swatch" style="background-color: var(--color-success-light);">Success Light</div>
+          <div class="color-swatch" style="background-color: var(--color-success);">Success</div>
+          <div class="color-swatch" style="background-color: var(--color-success-dark);">Success Dark</div>
+        </div>
+        <div>
+          <div class="color-swatch" style="background-color: var(--color-error-light);">Error Light</div>
+          <div class="color-swatch" style="background-color: var(--color-error);">Error</div>
+          <div class="color-swatch" style="background-color: var(--color-error-dark);">Error Dark</div>
+        </div>
+        <div>
+          <div class="color-swatch" style="background-color: var(--color-warning-light);">Warning Light</div>
+          <div class="color-swatch" style="background-color: var(--color-warning);">Warning</div>
+          <div class="color-swatch" style="background-color: var(--color-warning-dark);">Warning Dark</div>
+        </div>
+        <div>
+          <div class="color-swatch" style="background-color: var(--color-info-light);">Info Light</div>
+          <div class="color-swatch" style="background-color: var(--color-info);">Info</div>
+          <div class="color-swatch" style="background-color: var(--color-info-dark);">Info Dark</div>
+        </div>
+      </div>
+      
+      <h3 class="mt-6 mb-4">Neutral Colors</h3>
+      <div class="grid-colors">
+        <div>
+          <div class="color-swatch light" style="background-color: var(--color-neutral-50);">50</div>
+          <p class="text-sm text-center">neutral-50</p>
+        </div>
+        <div>
+          <div class="color-swatch light" style="background-color: var(--color-neutral-100);">100</div>
+          <p class="text-sm text-center">neutral-100</p>
+        </div>
+        <div>
+          <div class="color-swatch light" style="background-color: var(--color-neutral-200);">200</div>
+          <p class="text-sm text-center">neutral-200</p>
+        </div>
+        <div>
+          <div class="color-swatch light" style="background-color: var(--color-neutral-300);">300</div>
+          <p class="text-sm text-center">neutral-300</p>
+        </div>
+        <div>
+          <div class="color-swatch" style="background-color: var(--color-neutral-400);">400</div>
+          <p class="text-sm text-center">neutral-400</p>
+        </div>
+        <div>
+          <div class="color-swatch" style="background-color: var(--color-neutral-500);">500</div>
+          <p class="text-sm text-center">neutral-500</p>
+        </div>
+        <div>
+          <div class="color-swatch" style="background-color: var(--color-neutral-600);">600</div>
+          <p class="text-sm text-center">neutral-600</p>
+        </div>
+        <div>
+          <div class="color-swatch" style="background-color: var(--color-neutral-700);">700</div>
+          <p class="text-sm text-center">neutral-700</p>
+        </div>
+        <div>
+          <div class="color-swatch" style="background-color: var(--color-neutral-800);">800</div>
+          <p class="text-sm text-center">neutral-800</p>
+        </div>
+        <div>
+          <div class="color-swatch" style="background-color: var(--color-neutral-900);">900</div>
+          <p class="text-sm text-center">neutral-900</p>
+        </div>
+        <div>
+          <div class="color-swatch" style="background-color: var(--color-neutral-950);">950</div>
+          <p class="text-sm text-center">neutral-950</p>
+        </div>
+      </div>
+    </section>
+    
+    <!-- Typography Section -->
+    <section id="typography" class="section">
+      <h2>✍️ Tipografie</h2>
+      <div class="mt-4">
+        <h1 class="text-display mb-4">Display Text</h1>
+        <h1>Heading 1 - 2.25rem</h1>
+        <h2>Heading 2 - 1.875rem</h2>
+        <h3>Heading 3 - 1.5rem</h3>
+        <h4>Heading 4 - 1.25rem</h4>
+        <h5>Heading 5 - 1.125rem</h5>
+        <h6>Heading 6 - 1rem</h6>
+        <p class="text-base mt-4">Body text - 1rem (base)</p>
+        <p class="text-sm mt-2">Small text - 0.875rem</p>
+        <p class="text-xs mt-2">Extra small text - 0.75rem</p>
+        <p class="text-label mt-4">Label Text - 0.7rem (uppercase)</p>
+        
+        <div class="mt-6">
+          <p class="font-light">Font Weight Light (300)</p>
+          <p class="font-normal">Font Weight Normal (400)</p>
+          <p class="font-medium">Font Weight Medium (500)</p>
+          <p class="font-semibold">Font Weight Semibold (600)</p>
+          <p class="font-bold">Font Weight Bold (700)</p>
+          <p class="font-extrabold">Font Weight Extrabold (800)</p>
+        </div>
+        
+        <div class="mt-6">
+          <p class="font-mono">Monospace font: Menlo, Monaco, Courier New</p>
+        </div>
+      </div>
+    </section>
+    
+    <!-- Spacing Section -->
+    <section id="spacing" class="section">
+      <h2>📏 Spațiere</h2>
+      <div class="mt-4">
+        <div class="spacing-demo" style="width: var(--spacing-1);">1 (0.25rem)</div>
+        <div class="spacing-demo" style="width: var(--spacing-2);">2 (0.5rem)</div>
+        <div class="spacing-demo" style="width: var(--spacing-3);">3 (0.75rem)</div>
+        <div class="spacing-demo" style="width: var(--spacing-4);">4 (1rem)</div>
+        <div class="spacing-demo" style="width: var(--spacing-5);">5 (1.25rem)</div>
+        <div class="spacing-demo" style="width: var(--spacing-6);">6 (1.5rem)</div>
+        <div class="spacing-demo" style="width: var(--spacing-8);">8 (2rem)</div>
+        <div class="spacing-demo" style="width: var(--spacing-10);">10 (2.5rem)</div>
+        <div class="spacing-demo" style="width: var(--spacing-12);">12 (3rem)</div>
+      </div>
+    </section>
+    
+    <!-- Shadows Section -->
+    <section id="shadows" class="section">
+      <h2>🌑 Umbre</h2>
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
+        <div class="card-base card-padding-md" style="box-shadow: var(--shadow-sm);">
+          <p class="font-semibold">Shadow SM</p>
+          <code class="text-xs">var(--shadow-sm)</code>
+        </div>
+        <div class="card-base card-padding-md" style="box-shadow: var(--shadow-md);">
+          <p class="font-semibold">Shadow MD</p>
+          <code class="text-xs">var(--shadow-md)</code>
+        </div>
+        <div class="card-base card-padding-md" style="box-shadow: var(--shadow-lg);">
+          <p class="font-semibold">Shadow LG</p>
+          <code class="text-xs">var(--shadow-lg)</code>
+        </div>
+        <div class="card-base card-padding-md" style="box-shadow: var(--shadow-xl);">
+          <p class="font-semibold">Shadow XL</p>
+          <code class="text-xs">var(--shadow-xl)</code>
+        </div>
+        <div class="card-base card-padding-md" style="box-shadow: var(--shadow-2xl);">
+          <p class="font-semibold">Shadow 2XL</p>
+          <code class="text-xs">var(--shadow-2xl)</code>
+        </div>
+        <div class="card-base card-padding-md" style="box-shadow: var(--shadow-colored-primary);">
+          <p class="font-semibold">Colored Primary</p>
+          <code class="text-xs">var(--shadow-colored-primary)</code>
+        </div>
+      </div>
+    </section>
+    
+    <!-- Buttons Section -->
+    <section id="buttons" class="section">
+      <h2>🔘 Butoane</h2>
+      <div class="mt-4 space-y-6">
+        <div>
+          <h3 class="mb-3">Variante</h3>
+          <div class="flex flex-wrap gap-3">
+            <button class="btn btn-primary btn-md">Primary</button>
+            <button class="btn btn-secondary btn-md">Secondary</button>
+            <button class="btn btn-outline btn-md">Outline</button>
+            <button class="btn btn-ghost btn-md">Ghost</button>
+            <button class="btn btn-danger btn-md">Danger</button>
+            <button class="btn btn-success btn-md">Success</button>
+            <button class="btn btn-info btn-md">Info</button>
+          </div>
+        </div>
+        
+        <div>
+          <h3 class="mb-3">Dimensiuni</h3>
+          <div class="flex flex-wrap items-center gap-3">
+            <button class="btn btn-primary btn-sm">Small</button>
+            <button class="btn btn-primary btn-md">Medium</button>
+            <button class="btn btn-primary btn-lg">Large</button>
+          </div>
+        </div>
+        
+        <div>
+          <h3 class="mb-3">Stări</h3>
+          <div class="flex flex-wrap gap-3">
+            <button class="btn btn-primary btn-md">Normal</button>
+            <button class="btn btn-primary btn-md" disabled>Disabled</button>
+          </div>
+        </div>
+      </div>
+      
+      <div class="code-block mt-4">
+&lt;button class="btn btn-primary btn-md"&gt;Primary Button&lt;/button&gt;
+&lt;button class="btn btn-secondary btn-md"&gt;Secondary Button&lt;/button&gt;
+&lt;button class="btn btn-outline btn-md"&gt;Outline Button&lt;/button&gt;
+&lt;button class="btn btn-ghost btn-md"&gt;Ghost Button&lt;/button&gt;
+      </div>
+      
+      <div class="mt-6 card-base card-default card-padding-md">
+        <h3 class="font-semibold mb-3">📖 Detalii Complete - Butoane</h3>
+        
+        <h4 class="font-medium mb-2 mt-4">Variante Disponibile</h4>
+        <table class="table-base mt-2">
+          <thead>
+            <tr>
+              <th class="table-header">Varianta</th>
+              <th class="table-header">Clasă CSS</th>
+              <th class="table-header">Utilizare</th>
+              <th class="table-header">Exemplu</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="table-cell"><code>primary</code></td>
+              <td class="table-cell"><code>.btn-primary</code></td>
+              <td class="table-cell">Acțiuni principale, submit forms</td>
+              <td class="table-cell"><button class="btn btn-primary btn-sm">Primary</button></td>
+            </tr>
+            <tr>
+              <td class="table-cell"><code>secondary</code></td>
+              <td class="table-cell"><code>.btn-secondary</code></td>
+              <td class="table-cell">Acțiuni secundare, alternative</td>
+              <td class="table-cell"><button class="btn btn-secondary btn-sm">Secondary</button></td>
+            </tr>
+            <tr>
+              <td class="table-cell"><code>outline</code></td>
+              <td class="table-cell"><code>.btn-outline</code></td>
+              <td class="table-cell">Butoane cu border, accent pe text</td>
+              <td class="table-cell"><button class="btn btn-outline btn-sm">Outline</button></td>
+            </tr>
+            <tr>
+              <td class="table-cell"><code>ghost</code></td>
+              <td class="table-cell"><code>.btn-ghost</code></td>
+              <td class="table-cell">Butoane subtile, fără background</td>
+              <td class="table-cell"><button class="btn btn-ghost btn-sm">Ghost</button></td>
+            </tr>
+            <tr>
+              <td class="table-cell"><code>danger</code></td>
+              <td class="table-cell"><code>.btn-danger</code></td>
+              <td class="table-cell">Acțiuni distructive (ștergere, reset)</td>
+              <td class="table-cell"><button class="btn btn-danger btn-sm">Danger</button></td>
+            </tr>
+            <tr>
+              <td class="table-cell"><code>success</code></td>
+              <td class="table-cell"><code>.btn-success</code></td>
+              <td class="table-cell">Acțiuni pozitive (salvare, confirmare)</td>
+              <td class="table-cell"><button class="btn btn-success btn-sm">Success</button></td>
+            </tr>
+            <tr>
+              <td class="table-cell"><code>info</code></td>
+              <td class="table-cell"><code>.btn-info</code></td>
+              <td class="table-cell">Acțiuni informative, detalii</td>
+              <td class="table-cell"><button class="btn btn-info btn-sm">Info</button></td>
+            </tr>
+          </tbody>
+        </table>
+        
+        <h4 class="font-medium mb-2 mt-6">Dimensiuni</h4>
+        <div class="space-y-2">
+          <div class="flex items-center gap-4">
+            <span class="w-24 text-sm"><code>.btn-sm</code></span>
+            <button class="btn btn-primary btn-sm">Small Button</button>
+            <span class="text-xs text-text-muted">Padding: 0.5rem 1rem | Font: 0.875rem</span>
+          </div>
+          <div class="flex items-center gap-4">
+            <span class="w-24 text-sm"><code>.btn-md</code></span>
+            <button class="btn btn-primary btn-md">Medium Button</button>
+            <span class="text-xs text-text-muted">Padding: 0.625rem 1.25rem | Font: 1rem</span>
+          </div>
+          <div class="flex items-center gap-4">
+            <span class="w-24 text-sm"><code>.btn-lg</code></span>
+            <button class="btn btn-primary btn-lg">Large Button</button>
+            <span class="text-xs text-text-muted">Padding: 0.75rem 1.5rem | Font: 1.125rem</span>
+          </div>
+        </div>
+        
+        <h4 class="font-medium mb-2 mt-6">Stări și Comportament</h4>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="card-base card-outlined card-padding-sm">
+            <h5 class="font-semibold text-sm mb-2">Normal State</h5>
+            <button class="btn btn-primary btn-md w-full">Normal Button</button>
+            <p class="text-xs text-text-muted mt-2">Starea implicită, interactivă</p>
+          </div>
+          <div class="card-base card-outlined card-padding-sm">
+            <h5 class="font-semibold text-sm mb-2">Disabled State</h5>
+            <button class="btn btn-primary btn-md w-full" disabled>Disabled Button</button>
+            <p class="text-xs text-text-muted mt-2">Opacity: 0.5 | Cursor: not-allowed</p>
+          </div>
+          <div class="card-base card-outlined card-padding-sm">
+            <h5 class="font-semibold text-sm mb-2">Focus State</h5>
+            <button class="btn btn-primary btn-md w-full" onfocus="this.style.outline='2px solid var(--color-primary-500)'">Focus Button</button>
+            <p class="text-xs text-text-muted mt-2">Ring: 2px | Offset: 2px</p>
+          </div>
+          <div class="card-base card-outlined card-padding-sm">
+            <h5 class="font-semibold text-sm mb-2">Hover State</h5>
+            <button class="btn btn-primary btn-md w-full">Hover Button</button>
+            <p class="text-xs text-text-muted mt-2">Background color darkens | Transition: 200ms</p>
+          </div>
+        </div>
+        
+        <h4 class="font-medium mb-2 mt-6">Best Practices</h4>
+        <div class="space-y-3">
+          <div class="flex gap-3">
+            <span class="text-green-500 font-bold">✓</span>
+            <div>
+              <p class="font-medium text-sm">Folosește varianta corectă pentru context</p>
+              <p class="text-xs text-text-muted">Primary pentru acțiuni principale, danger pentru distructive</p>
+            </div>
+          </div>
+          <div class="flex gap-3">
+            <span class="text-green-500 font-bold">✓</span>
+            <div>
+              <p class="font-medium text-sm">Mărimea trebuie să fie proporțională cu importanța</p>
+              <p class="text-xs text-text-muted">Butoanele principale pot fi mai mari (lg), cele secundare mai mici (sm)</p>
+            </div>
+          </div>
+          <div class="flex gap-3">
+            <span class="text-red-500 font-bold">✗</span>
+            <div>
+              <p class="font-medium text-sm">Nu combina mai multe variante</p>
+              <p class="text-xs text-text-muted">Nu folosi .btn-primary.btn-danger simultan</p>
+            </div>
+          </div>
+          <div class="flex gap-3">
+            <span class="text-green-500 font-bold">✓</span>
+            <div>
+              <p class="font-medium text-sm">Folosește disabled state pentru acțiuni indisponibile</p>
+              <p class="text-xs text-text-muted">Mai bine decât să ascunzi butonul</p>
+            </div>
+          </div>
+        </div>
+        
+        <h4 class="font-medium mb-2 mt-6">Exemplu React Component</h4>
+        <div class="code-block">
+import { Button } from '../design-system';
+
+function MyComponent() {
+  return (
+    &lt;div className="space-x-4"&gt;
+      &lt;Button variant="primary" size="md" onClick={() => alert('Clicked!')}&gt;
+        Click Me
+      &lt;/Button&gt;
+      &lt;Button variant="outline" size="sm" disabled&gt;
+        Disabled
+      &lt;/Button&gt;
+      &lt;Button variant="danger" size="lg" fullWidth&gt;
+        Delete All
+      &lt;/Button&gt;
+    &lt;/div&gt;
+  );
+}
+        </div>
+      </div>
+    </section>
+    
+    <!-- Cards Section -->
+    <section id="cards" class="section">
+      <h2>🃏 Carduri</h2>
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
+        <div class="card-base card-default card-padding-md">
+          <h3 class="font-semibold mb-2">Card Default</h3>
+          <p class="text-sm text-text-secondary">Card cu border și shadow standard</p>
+        </div>
+        <div class="card-base card-elevated card-padding-md">
+          <h3 class="font-semibold mb-2">Card Elevated</h3>
+          <p class="text-sm text-text-secondary">Card cu shadow mai mare</p>
+        </div>
+        <div class="card-base card-outlined card-padding-md">
+          <h3 class="font-semibold mb-2">Card Outlined</h3>
+          <p class="text-sm text-text-secondary">Card cu border dublu</p>
+        </div>
+        <div class="card-base card-default card-padding-sm">
+          <h3 class="font-semibold mb-2">Padding Small</h3>
+          <p class="text-sm text-text-secondary">1rem padding</p>
+        </div>
+        <div class="card-base card-default card-padding-md">
+          <h3 class="font-semibold mb-2">Padding Medium</h3>
+          <p class="text-sm text-text-secondary">1.5rem padding</p>
+        </div>
+        <div class="card-base card-default card-padding-lg">
+          <h3 class="font-semibold mb-2">Padding Large</h3>
+          <p class="text-sm text-text-secondary">2rem padding</p>
+        </div>
+        <div class="card-base card-default card-padding-md card-hover">
+          <h3 class="font-semibold mb-2">Card Hover</h3>
+          <p class="text-sm text-text-secondary">Treci mouse-ul peste</p>
+        </div>
+      </div>
+      
+      <div class="code-block mt-4">
+&lt;div class="card-base card-default card-padding-md"&gt;
+  &lt;h3&gt;Card Title&lt;/h3&gt;
+  &lt;p&gt;Card content&lt;/p&gt;
+&lt;/div&gt;
+      </div>
+    </section>
+    
+    <!-- Badges Section -->
+    <section id="badges" class="section">
+      <h2>🏷️ Badge-uri</h2>
+      <div class="mt-4 space-y-6">
+        <div>
+          <h3 class="mb-3">Variante</h3>
+          <div class="flex flex-wrap gap-3">
+            <span class="badge-base badge-primary badge-md">Primary</span>
+            <span class="badge-base badge-secondary badge-md">Secondary</span>
+            <span class="badge-base badge-success badge-md">Success</span>
+            <span class="badge-base badge-error badge-md">Error</span>
+            <span class="badge-base badge-warning badge-md">Warning</span>
+            <span class="badge-base badge-info badge-md">Info</span>
+          </div>
+        </div>
+        
+        <div>
+          <h3 class="mb-3">Dimensiuni</h3>
+          <div class="flex flex-wrap items-center gap-3">
+            <span class="badge-base badge-primary badge-sm">Small</span>
+            <span class="badge-base badge-primary badge-md">Medium</span>
+            <span class="badge-base badge-primary badge-lg">Large</span>
+          </div>
+        </div>
+        
+        <div>
+          <h3 class="mb-3">Cu Dot</h3>
+          <div class="flex flex-wrap gap-3">
+            <span class="badge-base badge-success badge-md">
+              <span class="badge-dot" style="background-color: var(--color-success);"></span>
+              Active
+            </span>
+            <span class="badge-base badge-error badge-md">
+              <span class="badge-dot" style="background-color: var(--color-error);"></span>
+              Inactive
+            </span>
+          </div>
+        </div>
+      </div>
+      
+      <div class="code-block mt-4">
+&lt;span class="badge-base badge-primary badge-md"&gt;Primary Badge&lt;/span&gt;
+&lt;span class="badge-base badge-success badge-md"&gt;Success Badge&lt;/span&gt;
+      </div>
+    </section>
+    
+    <!-- Inputs Section -->
+    <section id="inputs" class="section">
+      <h2>📝 Input-uri</h2>
+      <div class="mt-4 space-y-6 max-w-md">
+        <div>
+          <label class="input-label">Email Address</label>
+          <input type="email" class="input-base" placeholder="Enter your email">
+        </div>
+        
+        <div>
+          <label class="input-label">Password</label>
+          <input type="password" class="input-base" placeholder="Enter your password">
+        </div>
+        
+        <div>
+          <label class="input-label">Email with Error</label>
+          <input type="email" class="input-base input-error" placeholder="invalid@email">
+          <span class="input-error-text">Please enter a valid email address</span>
+        </div>
+        
+        <div>
+          <label class="input-label">Helper Text</label>
+          <input type="text" class="input-base" placeholder="Enter text">
+          <span class="input-helper-text">This is a helper text</span>
+        </div>
+        
+        <div>
+          <label class="input-label">Disabled Input</label>
+          <input type="text" class="input-base" placeholder="Disabled" disabled>
+        </div>
+      </div>
+      
+      <div class="code-block mt-4">
+&lt;label class="input-label"&gt;Email Address&lt;/label&gt;
+&lt;input type="email" class="input-base" placeholder="Enter your email"&gt;
+
+&lt;label class="input-label"&gt;Email with Error&lt;/label&gt;
+&lt;input type="email" class="input-base input-error" placeholder="invalid@email"&gt;
+&lt;span class="input-error-text"&gt;Please enter a valid email address&lt;/span&gt;
+      </div>
+      
+      <div class="mt-6 card-base card-elevated card-padding-lg">
+        <h3 class="font-semibold mb-4">📝 Exemplu Formular Complet</h3>
+        <form class="space-y-6" onsubmit="event.preventDefault(); alert('Form submitted!');">
+          <div>
+            <label class="input-label">Nume Complet <span class="text-semantic-error">*</span></label>
+            <input type="text" class="input-base" placeholder="Ion Popescu" required>
+            <span class="input-helper-text">Introduceți numele complet</span>
+          </div>
+          
+          <div>
+            <label class="input-label">Email <span class="text-semantic-error">*</span></label>
+            <input type="email" class="input-base" placeholder="ion@example.com" required>
+            <span class="input-helper-text">Vom folosi acest email pentru comunicare</span>
+          </div>
+          
+          <div>
+            <label class="input-label">Telefon</label>
+            <input type="tel" class="input-base" placeholder="+40 123 456 789">
+            <span class="input-helper-text">Opțional</span>
+          </div>
+          
+          <div>
+            <label class="input-label">Parolă <span class="text-semantic-error">*</span></label>
+            <input type="password" class="input-base" placeholder="••••••••" required>
+            <span class="input-helper-text">Minim 8 caractere</span>
+          </div>
+          
+          <div>
+            <label class="input-label">Confirmă Parola <span class="text-semantic-error">*</span></label>
+            <input type="password" class="input-base input-error" placeholder="••••••••" required>
+            <span class="input-error-text">Parolele nu se potrivesc</span>
+          </div>
+          
+          <div class="flex items-start">
+            <input type="checkbox" id="terms" class="mt-1 mr-2" required>
+            <label for="terms" class="text-sm text-text-secondary">
+              Accept <a href="#" class="text-primary-600 hover:underline">termenii și condițiile</a>
+            </label>
+          </div>
+          
+          <div class="flex gap-3">
+            <button type="submit" class="btn btn-primary btn-md flex-1">Înregistrează-te</button>
+            <button type="button" class="btn btn-outline btn-md">Anulează</button>
+          </div>
+        </form>
+      </div>
+      
+      <div class="mt-6 card-base card-default card-padding-md">
+        <h3 class="font-semibold mb-3">📖 Detalii Complete - Input-uri</h3>
+        
+        <h4 class="font-medium mb-2 mt-4">Tipuri de Input</h4>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label class="input-label">Text</label>
+            <input type="text" class="input-base" placeholder="Text input">
+          </div>
+          <div>
+            <label class="input-label">Email</label>
+            <input type="email" class="input-base" placeholder="email@example.com">
+          </div>
+          <div>
+            <label class="input-label">Password</label>
+            <input type="password" class="input-base" placeholder="Password">
+          </div>
+          <div>
+            <label class="input-label">Number</label>
+            <input type="number" class="input-base" placeholder="123">
+          </div>
+          <div>
+            <label class="input-label">Date</label>
+            <input type="date" class="input-base">
+          </div>
+          <div>
+            <label class="input-label">Time</label>
+            <input type="time" class="input-base">
+          </div>
+          <div>
+            <label class="input-label">Search</label>
+            <input type="search" class="input-base" placeholder="Search...">
+          </div>
+          <div>
+            <label class="input-label">URL</label>
+            <input type="url" class="input-base" placeholder="https://example.com">
+          </div>
+        </div>
+        
+        <h4 class="font-medium mb-2 mt-6">Stări și Validare</h4>
+        <div class="space-y-4">
+          <div>
+            <label class="input-label">Input Normal</label>
+            <input type="text" class="input-base" placeholder="Normal state">
+            <span class="input-helper-text">Helper text pentru ghidare</span>
+          </div>
+          <div>
+            <label class="input-label">Input cu Eroare</label>
+            <input type="email" class="input-base input-error" placeholder="invalid-email" value="invalid">
+            <span class="input-error-text">Te rugăm să introduci un email valid</span>
+          </div>
+          <div>
+            <label class="input-label">Input Disabled</label>
+            <input type="text" class="input-base" placeholder="Disabled" disabled>
+            <span class="input-helper-text">Acest câmp nu este disponibil</span>
+          </div>
+          <div>
+            <label class="input-label">Input Readonly</label>
+            <input type="text" class="input-base" value="Valoare fixă" readonly>
+            <span class="input-helper-text">Valoare doar pentru citire</span>
+          </div>
+        </div>
+        
+        <h4 class="font-medium mb-2 mt-6">Best Practices</h4>
+        <div class="space-y-3">
+          <div class="flex gap-3">
+            <span class="text-green-500 font-bold">✓</span>
+            <div>
+              <p class="font-medium text-sm">Folosește label pentru fiecare input</p>
+              <p class="text-xs text-text-muted">Îmbunătățește accesibilitatea și UX</p>
+            </div>
+          </div>
+          <div class="flex gap-3">
+            <span class="text-green-500 font-bold">✓</span>
+            <div>
+              <p class="font-medium text-sm">Adaugă helper text pentru claritate</p>
+              <p class="text-xs text-text-muted">Ajută utilizatorul să înțeleagă ce trebuie introdus</p>
+            </div>
+          </div>
+          <div class="flex gap-3">
+            <span class="text-green-500 font-bold">✓</span>
+            <div>
+              <p class="font-medium text-sm">Validează în timp real când este posibil</p>
+              <p class="text-xs text-text-muted">Feedback imediat îmbunătățește experiența</p>
+            </div>
+          </div>
+          <div class="flex gap-3">
+            <span class="text-red-500 font-bold">✗</span>
+            <div>
+              <p class="font-medium text-sm">Nu folosi placeholder în loc de label</p>
+              <p class="text-xs text-text-muted">Placeholder-ul dispare când utilizatorul scrie</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+    
+    <!-- Tables Section -->
+    <section id="tables" class="section">
+      <h2>📊 Tabele</h2>
+      <div class="table-wrapper mt-4">
+        <table class="table-base">
+          <thead>
+            <tr>
+              <th class="table-header">Name</th>
+              <th class="table-header">Status</th>
+              <th class="table-header">Role</th>
+              <th class="table-header">Email</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="table-cell">John Doe</td>
+              <td class="table-cell">
+                <span class="badge-base badge-success badge-sm">Active</span>
+              </td>
+              <td class="table-cell">Admin</td>
+              <td class="table-cell">john@example.com</td>
+            </tr>
+            <tr>
+              <td class="table-cell">Jane Smith</td>
+              <td class="table-cell">
+                <span class="badge-base badge-success badge-sm">Active</span>
+              </td>
+              <td class="table-cell">User</td>
+              <td class="table-cell">jane@example.com</td>
+            </tr>
+            <tr>
+              <td class="table-cell">Bob Johnson</td>
+              <td class="table-cell">
+                <span class="badge-base badge-error badge-sm">Inactive</span>
+              </td>
+              <td class="table-cell">User</td>
+              <td class="table-cell">bob@example.com</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      
+      <div class="code-block mt-4">
+&lt;table class="table-base"&gt;
+  &lt;thead&gt;
+    &lt;tr&gt;
+      &lt;th class="table-header"&gt;Name&lt;/th&gt;
+      &lt;th class="table-header"&gt;Status&lt;/th&gt;
+    &lt;/tr&gt;
+  &lt;/thead&gt;
+  &lt;tbody&gt;
+    &lt;tr&gt;
+      &lt;td class="table-cell"&gt;John Doe&lt;/td&gt;
+      &lt;td class="table-cell"&gt;Active&lt;/td&gt;
+    &lt;/tr&gt;
+  &lt;/tbody&gt;
+&lt;/table&gt;
+      </div>
+      
+      <div class="mt-6 card-base card-elevated card-padding-lg">
+        <h3 class="font-semibold mb-4">📊 Tabel Avansat cu Acțiuni</h3>
+        <div class="table-wrapper">
+          <table class="table-base table-striped table-hover">
+            <thead>
+              <tr>
+                <th class="table-header">Utilizator</th>
+                <th class="table-header">Email</th>
+                <th class="table-header">Rol</th>
+                <th class="table-header">Status</th>
+                <th class="table-header">Ultima Activitate</th>
+                <th class="table-header">Acțiuni</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="table-cell">
+                  <div class="flex items-center">
+                    <div class="w-8 h-8 rounded-full bg-primary-500 flex items-center justify-center text-white text-sm font-semibold mr-3">JD</div>
+                    <span class="font-medium">John Doe</span>
+                  </div>
+                </td>
+                <td class="table-cell">john.doe@example.com</td>
+                <td class="table-cell">
+                  <span class="badge-base badge-primary badge-sm">Admin</span>
+                </td>
+                <td class="table-cell">
+                  <span class="badge-base badge-success badge-sm">
+                    <span class="badge-dot" style="background-color: var(--color-success);"></span>
+                    Activ
+                  </span>
+                </td>
+                <td class="table-cell text-text-secondary">Acum 2 ore</td>
+                <td class="table-cell">
+                  <div class="flex gap-2">
+                    <button class="btn btn-ghost btn-sm">Edit</button>
+                    <button class="btn btn-danger btn-sm">Delete</button>
+                  </div>
+                </td>
+              </tr>
+              <tr>
+                <td class="table-cell">
+                  <div class="flex items-center">
+                    <div class="w-8 h-8 rounded-full bg-secondary-500 flex items-center justify-center text-white text-sm font-semibold mr-3">JS</div>
+                    <span class="font-medium">Jane Smith</span>
+                  </div>
+                </td>
+                <td class="table-cell">jane.smith@example.com</td>
+                <td class="table-cell">
+                  <span class="badge-base badge-secondary badge-sm">User</span>
+                </td>
+                <td class="table-cell">
+                  <span class="badge-base badge-success badge-sm">
+                    <span class="badge-dot" style="background-color: var(--color-success);"></span>
+                    Activ
+                  </span>
+                </td>
+                <td class="table-cell text-text-secondary">Ieri</td>
+                <td class="table-cell">
+                  <div class="flex gap-2">
+                    <button class="btn btn-ghost btn-sm">Edit</button>
+                    <button class="btn btn-danger btn-sm">Delete</button>
+                  </div>
+                </td>
+              </tr>
+              <tr>
+                <td class="table-cell">
+                  <div class="flex items-center">
+                    <div class="w-8 h-8 rounded-full bg-neutral-500 flex items-center justify-center text-white text-sm font-semibold mr-3">BJ</div>
+                    <span class="font-medium">Bob Johnson</span>
+                  </div>
+                </td>
+                <td class="table-cell">bob.johnson@example.com</td>
+                <td class="table-cell">
+                  <span class="badge-base badge-secondary badge-sm">User</span>
+                </td>
+                <td class="table-cell">
+                  <span class="badge-base badge-error badge-sm">
+                    <span class="badge-dot" style="background-color: var(--color-error);"></span>
+                    Inactiv
+                  </span>
+                </td>
+                <td class="table-cell text-text-secondary">Acum 5 zile</td>
+                <td class="table-cell">
+                  <div class="flex gap-2">
+                    <button class="btn btn-ghost btn-sm">Edit</button>
+                    <button class="btn btn-danger btn-sm">Delete</button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        
+        <div class="mt-4 flex justify-between items-center">
+          <p class="text-sm text-text-secondary">Afișare 1-3 din 15 rezultate</p>
+          <div class="flex gap-2">
+            <button class="btn btn-outline btn-sm" disabled>Anterior</button>
+            <button class="btn btn-primary btn-sm">1</button>
+            <button class="btn btn-outline btn-sm">2</button>
+            <button class="btn btn-outline btn-sm">3</button>
+            <button class="btn btn-outline btn-sm">Următor</button>
+          </div>
+        </div>
+      </div>
+      
+      <div class="mt-6 card-base card-default card-padding-md">
+        <h3 class="font-semibold mb-3">📖 Detalii Complete - Tabele</h3>
+        
+        <h4 class="font-medium mb-2 mt-4">Clase Disponibile</h4>
+        <table class="table-base">
+          <thead>
+            <tr>
+              <th class="table-header">Clasă</th>
+              <th class="table-header">Descriere</th>
+              <th class="table-header">Utilizare</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="table-cell"><code>.table-wrapper</code></td>
+              <td class="table-cell">Wrapper pentru scroll orizontal</td>
+              <td class="table-cell">Obligatoriu pentru tabele largi</td>
+            </tr>
+            <tr>
+              <td class="table-cell"><code>.table-base</code></td>
+              <td class="table-cell">Stiluri de bază pentru tabel</td>
+              <td class="table-cell">Aplicat pe elementul &lt;table&gt;</td>
+            </tr>
+            <tr>
+              <td class="table-cell"><code>.table-striped</code></td>
+              <td class="table-cell">Rânduri alternante colorate</td>
+              <td class="table-cell">Pentru citire mai ușoară</td>
+            </tr>
+            <tr>
+              <td class="table-cell"><code>.table-hover</code></td>
+              <td class="table-cell">Highlight la hover</td>
+              <td class="table-cell">Pentru interacțiune</td>
+            </tr>
+            <tr>
+              <td class="table-cell"><code>.table-compact</code></td>
+              <td class="table-cell">Padding redus</td>
+              <td class="table-cell">Pentru tabele dense</td>
+            </tr>
+            <tr>
+              <td class="table-cell"><code>.table-header</code></td>
+              <td class="table-cell">Stiluri pentru header</td>
+              <td class="table-cell">Aplicat pe &lt;th&gt;</td>
+            </tr>
+            <tr>
+              <td class="table-cell"><code>.table-cell</code></td>
+              <td class="table-cell">Stiluri pentru celule</td>
+              <td class="table-cell">Aplicat pe &lt;td&gt;</td>
+            </tr>
+          </tbody>
+        </table>
+        
+        <h4 class="font-medium mb-2 mt-6">Best Practices</h4>
+        <div class="space-y-3">
+          <div class="flex gap-3">
+            <span class="text-green-500 font-bold">✓</span>
+            <div>
+              <p class="font-medium text-sm">Folosește .table-wrapper pentru tabele responsive</p>
+              <p class="text-xs text-text-muted">Permite scroll orizontal pe ecrane mici</p>
+            </div>
+          </div>
+          <div class="flex gap-3">
+            <span class="text-green-500 font-bold">✓</span>
+            <div>
+              <p class="font-medium text-sm">Adaugă .table-striped pentru tabele mari</p>
+              <p class="text-xs text-text-muted">Îmbunătățește lizibilitatea</p>
+            </div>
+          </div>
+          <div class="flex gap-3">
+            <span class="text-green-500 font-bold">✓</span>
+            <div>
+              <p class="font-medium text-sm">Folosește badge-uri pentru status</p>
+              <p class="text-xs text-text-muted">Vizual mai clar decât text simplu</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+    
+    <!-- Layout Examples Section -->
+    <section id="layouts" class="section">
+      <h2>🏗️ Exemple de Layout-uri</h2>
+      <p class="text-text-secondary mb-6">Pattern-uri comune de layout folosind componentele design system-ului.</p>
+      
+      <div class="space-y-6">
+        <!-- Dashboard Layout -->
+        <div class="card-base card-elevated card-padding-lg">
+          <h3 class="font-semibold mb-4">📊 Dashboard Layout</h3>
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+            <div class="card-base card-default card-padding-md">
+              <div class="flex items-center justify-between mb-2">
+                <span class="text-sm text-text-secondary">Total Users</span>
+                <span class="text-2xl">👥</span>
+              </div>
+              <p class="text-3xl font-bold">1,234</p>
+              <p class="text-xs text-success mt-1">+12% față de luna trecută</p>
+            </div>
+            <div class="card-base card-default card-padding-md">
+              <div class="flex items-center justify-between mb-2">
+                <span class="text-sm text-text-secondary">Active Sessions</span>
+                <span class="text-2xl">🔴</span>
+              </div>
+              <p class="text-3xl font-bold">567</p>
+              <p class="text-xs text-success mt-1">+5% față de ieri</p>
+            </div>
+            <div class="card-base card-default card-padding-md">
+              <div class="flex items-center justify-between mb-2">
+                <span class="text-sm text-text-secondary">Revenue</span>
+                <span class="text-2xl">💰</span>
+              </div>
+              <p class="text-3xl font-bold">€45K</p>
+              <p class="text-xs text-error mt-1">-3% față de luna trecută</p>
+            </div>
+            <div class="card-base card-default card-padding-md">
+              <div class="flex items-center justify-between mb-2">
+                <span class="text-sm text-text-secondary">Orders</span>
+                <span class="text-2xl">📦</span>
+              </div>
+              <p class="text-3xl font-bold">890</p>
+              <p class="text-xs text-success mt-1">+8% față de ieri</p>
+            </div>
+          </div>
+          
+          <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            <div class="lg:col-span-2 card-base card-default card-padding-md">
+              <h4 class="font-semibold mb-4">Recent Activity</h4>
+              <div class="space-y-3">
+                <div class="flex items-center gap-3 pb-3 border-b border-border">
+                  <div class="w-10 h-10 rounded-full bg-primary-100 flex items-center justify-center">JD</div>
+                  <div class="flex-1">
+                    <p class="text-sm font-medium">John Doe a creat un nou utilizator</p>
+                    <p class="text-xs text-text-secondary">Acum 5 minute</p>
+                  </div>
+                </div>
+                <div class="flex items-center gap-3 pb-3 border-b border-border">
+                  <div class="w-10 h-10 rounded-full bg-secondary-100 flex items-center justify-center">JS</div>
+                  <div class="flex-1">
+                    <p class="text-sm font-medium">Jane Smith a actualizat un document</p>
+                    <p class="text-xs text-text-secondary">Acum 15 minute</p>
+                  </div>
+                </div>
+                <div class="flex items-center gap-3">
+                  <div class="w-10 h-10 rounded-full bg-neutral-100 flex items-center justify-center">BJ</div>
+                  <div class="flex-1">
+                    <p class="text-sm font-medium">Bob Johnson a șters o înregistrare</p>
+                    <p class="text-xs text-text-secondary">Acum 1 oră</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div class="card-base card-default card-padding-md">
+              <h4 class="font-semibold mb-4">Quick Actions</h4>
+              <div class="space-y-2">
+                <button class="btn btn-primary btn-md w-full">Create User</button>
+                <button class="btn btn-outline btn-md w-full">Import Data</button>
+                <button class="btn btn-outline btn-md w-full">Export Report</button>
+                <button class="btn btn-outline btn-md w-full">Settings</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Profile Card Layout -->
+        <div class="card-base card-elevated card-padding-lg">
+          <h3 class="font-semibold mb-4">👤 Profile Card Layout</h3>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="md:col-span-1">
+              <div class="card-base card-default card-padding-lg text-center">
+                <div class="w-24 h-24 rounded-full bg-primary-500 mx-auto mb-4 flex items-center justify-center text-white text-3xl font-bold">JD</div>
+                <h3 class="text-xl font-semibold mb-1">John Doe</h3>
+                <p class="text-sm text-text-secondary mb-4">john.doe@example.com</p>
+                <div class="flex justify-center gap-2 mb-4">
+                  <span class="badge-base badge-primary badge-md">Admin</span>
+                  <span class="badge-base badge-success badge-md">
+                    <span class="badge-dot" style="background-color: var(--color-success);"></span>
+                    Activ
+                  </span>
+                </div>
+                <div class="space-y-2">
+                  <button class="btn btn-primary btn-md w-full">Edit Profile</button>
+                  <button class="btn btn-outline btn-md w-full">View Activity</button>
+                </div>
+              </div>
+            </div>
+            
+            <div class="md:col-span-2 space-y-4">
+              <div class="card-base card-default card-padding-md">
+                <h4 class="font-semibold mb-4">Informații Personale</h4>
+                <div class="grid grid-cols-2 gap-4">
+                  <div>
+                    <label class="input-label">Nume</label>
+                    <input type="text" class="input-base" value="John" readonly>
+                  </div>
+                  <div>
+                    <label class="input-label">Prenume</label>
+                    <input type="text" class="input-base" value="Doe" readonly>
+                  </div>
+                  <div>
+                    <label class="input-label">Email</label>
+                    <input type="email" class="input-base" value="john.doe@example.com" readonly>
+                  </div>
+                  <div>
+                    <label class="input-label">Telefon</label>
+                    <input type="tel" class="input-base" value="+40 123 456 789" readonly>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="card-base card-default card-padding-md">
+                <h4 class="font-semibold mb-4">Statistici</h4>
+                <div class="grid grid-cols-3 gap-4">
+                  <div class="text-center">
+                    <p class="text-2xl font-bold">156</p>
+                    <p class="text-xs text-text-secondary">Proiecte</p>
+                  </div>
+                  <div class="text-center">
+                    <p class="text-2xl font-bold">2.3K</p>
+                    <p class="text-xs text-text-secondary">Task-uri</p>
+                  </div>
+                  <div class="text-center">
+                    <p class="text-2xl font-bold">98%</p>
+                    <p class="text-xs text-text-secondary">Completare</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+    
+    <!-- Border Radius Section -->
+    <section class="section">
+      <h2>🔲 Border Radius</h2>
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
+        <div class="card-base card-padding-md" style="border-radius: var(--border-radius-sm);">
+          <p class="text-sm font-semibold">SM</p>
+          <code class="text-xs">0.125rem</code>
+        </div>
+        <div class="card-base card-padding-md" style="border-radius: var(--border-radius-md);">
+          <p class="text-sm font-semibold">MD</p>
+          <code class="text-xs">0.375rem</code>
+        </div>
+        <div class="card-base card-padding-md" style="border-radius: var(--border-radius-lg);">
+          <p class="text-sm font-semibold">LG</p>
+          <code class="text-xs">0.5rem</code>
+        </div>
+        <div class="card-base card-padding-md" style="border-radius: var(--border-radius-xl);">
+          <p class="text-sm font-semibold">XL</p>
+          <code class="text-xs">0.75rem</code>
+        </div>
+        <div class="card-base card-padding-md" style="border-radius: var(--border-radius-2xl);">
+          <p class="text-sm font-semibold">2XL</p>
+          <code class="text-xs">1rem</code>
+        </div>
+        <div class="card-base card-padding-md" style="border-radius: var(--border-radius-full);">
+          <p class="text-sm font-semibold">Full</p>
+          <code class="text-xs">9999px</code>
+        </div>
+      </div>
+    </section>
+    
+    <!-- CSS Classes Reference -->
+    <section class="section">
+      <h2>📋 Clase CSS Disponibile</h2>
+      <div class="mt-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div class="card-base card-default card-padding-md">
+          <h3 class="font-semibold mb-2">Buttons</h3>
+          <ul class="text-sm space-y-1">
+            <li><code>.btn</code></li>
+            <li><code>.btn-primary</code></li>
+            <li><code>.btn-secondary</code></li>
+            <li><code>.btn-outline</code></li>
+            <li><code>.btn-ghost</code></li>
+            <li><code>.btn-danger</code></li>
+            <li><code>.btn-success</code></li>
+            <li><code>.btn-info</code></li>
+            <li><code>.btn-sm</code></li>
+            <li><code>.btn-md</code></li>
+            <li><code>.btn-lg</code></li>
+          </ul>
+        </div>
+        
+        <div class="card-base card-default card-padding-md">
+          <h3 class="font-semibold mb-2">Cards</h3>
+          <ul class="text-sm space-y-1">
+            <li><code>.card-base</code></li>
+            <li><code>.card-default</code></li>
+            <li><code>.card-elevated</code></li>
+            <li><code>.card-outlined</code></li>
+            <li><code>.card-padding-sm</code></li>
+            <li><code>.card-padding-md</code></li>
+            <li><code>.card-padding-lg</code></li>
+            <li><code>.card-hover</code></li>
+          </ul>
+        </div>
+        
+        <div class="card-base card-default card-padding-md">
+          <h3 class="font-semibold mb-2">Badges</h3>
+          <ul class="text-sm space-y-1">
+            <li><code>.badge-base</code></li>
+            <li><code>.badge-primary</code></li>
+            <li><code>.badge-secondary</code></li>
+            <li><code>.badge-success</code></li>
+            <li><code>.badge-error</code></li>
+            <li><code>.badge-warning</code></li>
+            <li><code>.badge-info</code></li>
+            <li><code>.badge-sm</code></li>
+            <li><code>.badge-md</code></li>
+            <li><code>.badge-lg</code></li>
+            <li><code>.badge-dot</code></li>
+          </ul>
+        </div>
+        
+        <div class="card-base card-default card-padding-md">
+          <h3 class="font-semibold mb-2">Inputs</h3>
+          <ul class="text-sm space-y-1">
+            <li><code>.input-base</code></li>
+            <li><code>.input-label</code></li>
+            <li><code>.input-error</code></li>
+            <li><code>.input-error-text</code></li>
+            <li><code>.input-helper-text</code></li>
+          </ul>
+        </div>
+        
+        <div class="card-base card-default card-padding-md">
+          <h3 class="font-semibold mb-2">Tables</h3>
+          <ul class="text-sm space-y-1">
+            <li><code>.table-wrapper</code></li>
+            <li><code>.table-base</code></li>
+            <li><code>.table-header</code></li>
+            <li><code>.table-cell</code></li>
+            <li><code>.table-striped</code></li>
+            <li><code>.table-hover</code></li>
+          </ul>
+        </div>
+        
+        <div class="card-base card-default card-padding-md">
+          <h3 class="font-semibold mb-2">Utilities</h3>
+          <ul class="text-sm space-y-1">
+            <li><code>.text-label</code></li>
+            <li><code>.text-display</code></li>
+            <li><code>.section</code></li>
+          </ul>
+        </div>
+      </div>
+    </section>
+    
+    <!-- Breakpoints Section -->
+    <section class="section">
+      <h2>📱 Breakpoints</h2>
+      <div class="mt-4">
+        <table class="table-base">
+          <thead>
+            <tr>
+              <th class="table-header">Breakpoint</th>
+              <th class="table-header">Min Width</th>
+              <th class="table-header">Usage</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="table-cell"><code>mobile</code></td>
+              <td class="table-cell">480px</td>
+              <td class="table-cell">Mobile devices</td>
+            </tr>
+            <tr>
+              <td class="table-cell"><code>sm</code></td>
+              <td class="table-cell">640px</td>
+              <td class="table-cell">Small tablets</td>
+            </tr>
+            <tr>
+              <td class="table-cell"><code>md</code></td>
+              <td class="table-cell">768px</td>
+              <td class="table-cell">Tablets</td>
+            </tr>
+            <tr>
+              <td class="table-cell"><code>lg</code></td>
+              <td class="table-cell">1024px</td>
+              <td class="table-cell">Laptops</td>
+            </tr>
+            <tr>
+              <td class="table-cell"><code>xl</code></td>
+              <td class="table-cell">1280px</td>
+              <td class="table-cell">Desktops</td>
+            </tr>
+            <tr>
+              <td class="table-cell"><code>2xl</code></td>
+              <td class="table-cell">1536px</td>
+              <td class="table-cell">Large desktops</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+    
+    <!-- Transitions Section -->
+    <section class="section">
+      <h2>⚡ Tranziții</h2>
+      <div class="mt-4 space-y-4">
+        <div class="card-base card-default card-padding-md transition-default" style="transition: var(--transition-default);">
+          <p class="font-semibold mb-2">Default Transition</p>
+          <code class="text-xs">var(--transition-default)</code>
+          <p class="text-sm text-text-secondary mt-2">Trece mouse-ul peste pentru a vedea tranziția</p>
+        </div>
+        
+        <div class="card-base card-default card-padding-md transition-colors" style="transition: var(--transition-colors);">
+          <p class="font-semibold mb-2">Colors Transition</p>
+          <code class="text-xs">var(--transition-colors)</code>
+          <p class="text-sm text-text-secondary mt-2">Tranziție pentru culori</p>
+        </div>
+      </div>
+    </section>
+    
+    <!-- Accessibility Section -->
+    <section id="accessibility" class="section">
+      <h2>♿ Accesibilitate (A11y)</h2>
+      <p class="text-text-secondary mb-6">Design system-ul este construit cu accesibilitatea în minte, respectând standardele WCAG 2.1.</p>
+      
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="card-base card-default card-padding-md">
+          <h3 class="font-semibold mb-3 flex items-center">
+            <span class="text-2xl mr-2">⌨️</span>
+            Keyboard Navigation
+          </h3>
+          <ul class="space-y-2 text-sm">
+            <li class="flex items-start">
+              <span class="text-green-500 mr-2">✓</span>
+              <span>Toate componentele interactive sunt accesibile prin Tab</span>
+            </li>
+            <li class="flex items-start">
+              <span class="text-green-500 mr-2">✓</span>
+              <span>Focus visible cu ring-uri colorate</span>
+            </li>
+            <li class="flex items-start">
+              <span class="text-green-500 mr-2">✓</span>
+              <span>Enter/Space pentru activare</span>
+            </li>
+            <li class="flex items-start">
+              <span class="text-green-500 mr-2">✓</span>
+              <span>Escape pentru închidere modals</span>
+            </li>
+          </ul>
+        </div>
+        
+        <div class="card-base card-default card-padding-md">
+          <h3 class="font-semibold mb-3 flex items-center">
+            <span class="text-2xl mr-2">🔊</span>
+            Screen Readers
+          </h3>
+          <ul class="space-y-2 text-sm">
+            <li class="flex items-start">
+              <span class="text-green-500 mr-2">✓</span>
+              <span>ARIA labels pe toate componentele</span>
+            </li>
+            <li class="flex items-start">
+              <span class="text-green-500 mr-2">✓</span>
+              <span>Roles și states corecte</span>
+            </li>
+            <li class="flex items-start">
+              <span class="text-green-500 mr-2">✓</span>
+              <span>Error messages cu role="alert"</span>
+            </li>
+            <li class="flex items-start">
+              <span class="text-green-500 mr-2">✓</span>
+              <span>Form labels asociate corect</span>
+            </li>
+          </ul>
+        </div>
+        
+        <div class="card-base card-default card-padding-md">
+          <h3 class="font-semibold mb-3 flex items-center">
+            <span class="text-2xl mr-2">🎨</span>
+            Color Contrast
+          </h3>
+          <ul class="space-y-2 text-sm">
+            <li class="flex items-start">
+              <span class="text-green-500 mr-2">✓</span>
+              <span>Raport minim 4.5:1 pentru text</span>
+            </li>
+            <li class="flex items-start">
+              <span class="text-green-500 mr-2">✓</span>
+              <span>Raport minim 3:1 pentru UI components</span>
+            </li>
+            <li class="flex items-start">
+              <span class="text-green-500 mr-2">✓</span>
+              <span>Culorile nu sunt singurul indicator</span>
+            </li>
+            <li class="flex items-start">
+              <span class="text-green-500 mr-2">✓</span>
+              <span>Icons și text pentru acțiuni</span>
+            </li>
+          </ul>
+        </div>
+        
+        <div class="card-base card-default card-padding-md">
+          <h3 class="font-semibold mb-3 flex items-center">
+            <span class="text-2xl mr-2">📱</span>
+            Responsive Design
+          </h3>
+          <ul class="space-y-2 text-sm">
+            <li class="flex items-start">
+              <span class="text-green-500 mr-2">✓</span>
+              <span>Mobile-first approach</span>
+            </li>
+            <li class="flex items-start">
+              <span class="text-green-500 mr-2">✓</span>
+              <span>Touch targets minime 44x44px</span>
+            </li>
+            <li class="flex items-start">
+              <span class="text-green-500 mr-2">✓</span>
+              <span>Text scalable până la 200%</span>
+            </li>
+            <li class="flex items-start">
+              <span class="text-green-500 mr-2">✓</span>
+              <span>Layout flexibil și adaptiv</span>
+            </li>
+          </ul>
+        </div>
+      </div>
+      
+      <div class="mt-6 card-base card-elevated card-padding-md">
+        <h3 class="font-semibold mb-4">Exemplu: Input Accesibil</h3>
+        <div class="code-block">
+&lt;div&gt;
+  &lt;label htmlFor="email-input" className="input-label"&gt;
+    Email Address
+    &lt;span className="sr-only"&gt; (required)&lt;/span&gt;
+  &lt;/label&gt;
+  &lt;input
+    id="email-input"
+    type="email"
+    className="input-base"
+    aria-required="true"
+    aria-invalid={hasError}
+    aria-describedby={hasError ? "email-error" : "email-helper"}
+    placeholder="Enter your email"
+  /&gt;
+  {hasError && (
+    &lt;span id="email-error" className="input-error-text" role="alert"&gt;
+      Please enter a valid email address
+    &lt;/span&gt;
+  )}
+  {!hasError && (
+    &lt;span id="email-helper" className="input-helper-text"&gt;
+      We'll never share your email
+    &lt;/span&gt;
+  )}
+&lt;/div&gt;
+        </div>
+      </div>
+    </section>
+    
+    <!-- Performance Section -->
+    <section class="section">
+      <h2>⚡ Performanță și Optimizare</h2>
+      <p class="text-text-secondary mb-6">Best practices pentru performanță optimă a aplicației.</p>
+      
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="card-base card-default card-padding-md">
+          <h3 class="font-semibold mb-3">🚀 CSS Optimization</h3>
+          <ul class="space-y-2 text-sm">
+            <li class="flex items-start">
+              <span class="text-green-500 mr-2">✓</span>
+              <span>Tailwind CSS purge pentru bundle size redus</span>
+            </li>
+            <li class="flex items-start">
+              <span class="text-green-500 mr-2">✓</span>
+              <span>CSS Variables pentru runtime theme switching</span>
+            </li>
+            <li class="flex items-start">
+              <span class="text-green-500 mr-2">✓</span>
+              <span>Minimal CSS-in-JS overhead</span>
+            </li>
+            <li class="flex items-start">
+              <span class="text-green-500 mr-2">✓</span>
+              <span>Critical CSS inline pentru first paint</span>
+            </li>
+          </ul>
+        </div>
+        
+        <div class="card-base card-default card-padding-md">
+          <h3 class="font-semibold mb-3">📦 Bundle Size</h3>
+          <ul class="space-y-2 text-sm">
+            <li class="flex items-start">
+              <span class="text-green-500 mr-2">✓</span>
+              <span>Tree-shaking pentru librării ES modules</span>
+            </li>
+            <li class="flex items-start">
+              <span class="text-green-500 mr-2">✓</span>
+              <span>Code splitting cu React.lazy()</span>
+            </li>
+            <li class="flex items-start">
+              <span class="text-green-500 mr-2">✓</span>
+              <span>Dynamic imports pentru componente mari</span>
+            </li>
+            <li class="flex items-start">
+              <span class="text-green-500 mr-2">✓</span>
+              <span>Icon libraries tree-shakeable</span>
+            </li>
+          </ul>
+        </div>
+        
+        <div class="card-base card-default card-padding-md">
+          <h3 class="font-semibold mb-3">🔄 Rendering</h3>
+          <ul class="space-y-2 text-sm">
+            <li class="flex items-start">
+              <span class="text-green-500 mr-2">✓</span>
+              <span>React.memo() pentru componente pure</span>
+            </li>
+            <li class="flex items-start">
+              <span class="text-green-500 mr-2">✓</span>
+              <span>useMemo() pentru calcule costisitoare</span>
+            </li>
+            <li class="flex items-start">
+              <span class="text-green-500 mr-2">✓</span>
+              <span>useCallback() pentru event handlers</span>
+            </li>
+            <li class="flex items-start">
+              <span class="text-green-500 mr-2">✓</span>
+              <span>Virtual scrolling pentru liste mari</span>
+            </li>
+          </ul>
+        </div>
+        
+        <div class="card-base card-default card-padding-md">
+          <h3 class="font-semibold mb-3">🌐 Network</h3>
+          <ul class="space-y-2 text-sm">
+            <li class="flex items-start">
+              <span class="text-green-500 mr-2">✓</span>
+              <span>Lazy loading pentru imagini</span>
+            </li>
+            <li class="flex items-start">
+              <span class="text-green-500 mr-2">✓</span>
+              <span>CDN pentru assets statice</span>
+            </li>
+            <li class="flex items-start">
+              <span class="text-green-500 mr-2">✓</span>
+              <span>HTTP/2 pentru paralel requests</span>
+            </li>
+            <li class="flex items-start">
+              <span class="text-green-500 mr-2">✓</span>
+              <span>Service workers pentru caching</span>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </section>
+    
+    <!-- Quick Reference Section -->
+    <section class="section">
+      <h2>📖 Referință Rapidă</h2>
+      <p class="text-text-secondary mb-6">Ghid rapid pentru clasele CSS și componentele disponibile.</p>
+      
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div class="card-base card-default card-padding-md">
+          <h3 class="font-semibold mb-3">Buttons</h3>
+          <div class="space-y-1 text-sm font-mono">
+            <div>.btn .btn-primary</div>
+            <div>.btn .btn-secondary</div>
+            <div>.btn .btn-outline</div>
+            <div>.btn .btn-ghost</div>
+            <div>.btn .btn-danger</div>
+            <div>.btn-sm | .btn-md | .btn-lg</div>
+          </div>
+        </div>
+        
+        <div class="card-base card-default card-padding-md">
+          <h3 class="font-semibold mb-3">Cards</h3>
+          <div class="space-y-1 text-sm font-mono">
+            <div>.card-base</div>
+            <div>.card-default</div>
+            <div>.card-elevated</div>
+            <div>.card-outlined</div>
+            <div>.card-padding-sm/md/lg</div>
+            <div>.card-hover</div>
+          </div>
+        </div>
+        
+        <div class="card-base card-default card-padding-md">
+          <h3 class="font-semibold mb-3">Badges</h3>
+          <div class="space-y-1 text-sm font-mono">
+            <div>.badge-base</div>
+            <div>.badge-primary</div>
+            <div>.badge-success</div>
+            <div>.badge-error</div>
+            <div>.badge-warning</div>
+            <div>.badge-sm/md/lg</div>
+          </div>
+        </div>
+        
+        <div class="card-base card-default card-padding-md">
+          <h3 class="font-semibold mb-3">Inputs</h3>
+          <div class="space-y-1 text-sm font-mono">
+            <div>.input-base</div>
+            <div>.input-label</div>
+            <div>.input-error</div>
+            <div>.input-error-text</div>
+            <div>.input-helper-text</div>
+          </div>
+        </div>
+        
+        <div class="card-base card-default card-padding-md">
+          <h3 class="font-semibold mb-3">Tables</h3>
+          <div class="space-y-1 text-sm font-mono">
+            <div>.table-wrapper</div>
+            <div>.table-base</div>
+            <div>.table-striped</div>
+            <div>.table-hover</div>
+            <div>.table-header</div>
+            <div>.table-cell</div>
+          </div>
+        </div>
+        
+        <div class="card-base card-default card-padding-md">
+          <h3 class="font-semibold mb-3">Utilities</h3>
+          <div class="space-y-1 text-sm font-mono">
+            <div>.text-label</div>
+            <div>.text-display</div>
+            <div>.section</div>
+            <div>.transition-default</div>
+            <div>.transition-colors</div>
+          </div>
+        </div>
+      </div>
+    </section>
+    
+    <!-- Navigation Index -->
+    <section class="section">
+      <h2>🗺️ Index de Navigare</h2>
+      <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 mt-4">
+        <a href="#libraries" class="card-base card-outlined card-padding-sm card-hover text-center text-sm">📚 Librării</a>
+        <a href="#colors" class="card-base card-outlined card-padding-sm card-hover text-center text-sm">🎨 Culori</a>
+        <a href="#typography" class="card-base card-outlined card-padding-sm card-hover text-center text-sm">✍️ Tipografie</a>
+        <a href="#spacing" class="card-base card-outlined card-padding-sm card-hover text-center text-sm">📏 Spațiere</a>
+        <a href="#shadows" class="card-base card-outlined card-padding-sm card-hover text-center text-sm">🌑 Umbre</a>
+        <a href="#buttons" class="card-base card-outlined card-padding-sm card-hover text-center text-sm">🔘 Butoane</a>
+        <a href="#cards" class="card-base card-outlined card-padding-sm card-hover text-center text-sm">🃏 Carduri</a>
+        <a href="#badges" class="card-base card-outlined card-padding-sm card-hover text-center text-sm">🏷️ Badge-uri</a>
+        <a href="#inputs" class="card-base card-outlined card-padding-sm card-hover text-center text-sm">📝 Input-uri</a>
+        <a href="#tables" class="card-base card-outlined card-padding-sm card-hover text-center text-sm">📊 Tabele</a>
+        <a href="#layouts" class="card-base card-outlined card-padding-sm card-hover text-center text-sm">🏗️ Layout-uri</a>
+        <a href="#accessibility" class="card-base card-outlined card-padding-sm card-hover text-center text-sm">♿ Accesibilitate</a>
+      </div>
+    </section>
+    
+    <footer class="mt-12 text-center text-text-secondary pb-8">
+      <div class="card-base card-elevated card-padding-lg max-w-2xl mx-auto">
+        <h3 class="font-semibold text-xl mb-2">CO2 Trading Platform</h3>
+        <p class="text-lg mb-4">Design System v1.0.0</p>
+        <p class="text-sm text-text-muted mb-4">Documentație completă și detaliată a temei grafice, claselor CSS, componentelor și librăriilor</p>
+        <div class="flex justify-center gap-4 mt-4">
+          <a href="#" class="text-primary-600 hover:underline text-sm">Documentație</a>
+          <a href="#" class="text-primary-600 hover:underline text-sm">GitHub</a>
+          <a href="#" class="text-primary-600 hover:underline text-sm">Support</a>
+        </div>
+      </div>
+    </footer>
+  </div>
+  
+  <script>
+    function toggleTheme() {
+      document.documentElement.classList.toggle('dark');
+      const isDark = document.documentElement.classList.contains('dark');
+      localStorage.setItem('theme', isDark ? 'dark' : 'light');
+    }
+    
+    // Load saved theme
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme === 'dark') {
+      document.documentElement.classList.add('dark');
+    }
+  </script>
+</body>
+</html>
+

@@ -1,0 +1,43 @@
+/**
+ * Utility Styles
+ * 
+ * Custom utility classes using Tailwind's utilities layer.
+ * These extend Tailwind's default utilities with custom values.
+ */
+
+@tailwind utilities;
+
+@layer utilities {
+  /* Text utilities */
+  .text-label {
+    font-size: var(--font-size-label);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+  }
+  
+  .text-display {
+    font-size: var(--font-size-display);
+    line-height: 1.1;
+    letter-spacing: -0.1em;
+  }
+  
+  /* Spacing utilities */
+  .gap-component-sm { gap: var(--spacing-2); }
+  .gap-component-md { gap: var(--spacing-4); }
+  .gap-component-lg { gap: var(--spacing-6); }
+  
+  /* Shadow utilities */
+  .shadow-colored-primary {
+    box-shadow: var(--shadow-colored-primary);
+  }
+  
+  /* Transition utilities */
+  .transition-default {
+    transition: var(--transition-default);
+  }
+  
+  .transition-colors {
+    transition: var(--transition-colors);
+  }
+}
+

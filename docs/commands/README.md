@@ -1,42 +1,225 @@
-# Overview
-This folder includes prompts that should be copy/pasted into your docs/commands folder and then used by tagging them in the chat (e.g. @plan_feature.md) and providing additional context such as the description of your feature.
+# 🤖 Cursor Auto-Pilot Workflow System
 
-# Example Use
-## Create Brief
-Used for establishing the bigger picture context of what this project is about which can be helpful to plan new features.
-```
-@create_brief.md 
+Sistem automat de development workflow pentru Cursor. **Un singur command, zero intervenție.**
 
-We are building an application to help dungeon masters plan their D&D campaigns and it's going to be called Dragonroll. It will include a variety of different tools, such as a random map generator and bc generator, loot generator and so on. We will use ai and allow the dungeon master to input certain prompts or use the tools directly.
-```
+## 🚀 Quick Start
 
-## Plan Feature
-Used to create a technical plan for a new feature. Focuses on the technical requirements - NOT product manager context bloat or overly specific code details.
-```
-@plan_feature.md 
+```bash
+# Pune folderul în proiectul tău
+cp -r commands/ docs/commands/
 
-We want to add a new page that is going to be our NPC generator. To implement this, we are going to use the open ai api to generate the description of the npc as well as a name And we'll also generate an image for the npc using the open ai gpt-image-1 model.
+# În Cursor, pentru un feature complet:
+@commands/auto Add user authentication with OAuth2
+
+# Pentru fix-uri rapide:
+@commands/quick fix the login button alignment
 ```
 
-## Code Review
-Used to review the successful completion of a plan in a separate chat (and yes, it's this minimal)
+## 📋 Commands
+
+### Primary Commands (Auto-Pilot)
+
+| Command | Timp | Descriere |
+|---------|------|-----------|
+| `@auto [task]` | 1-5 min | **Full workflow automat** - plan, implement, test, docs, commit |
+| `@quick [task]` | 10-30s | **Fast mode** - implement direct fără overhead |
+
+### Manual Commands (Control Total)
+
+| Command | Descriere |
+|---------|-----------|
+| `@orchestrator` | Analizează proiectul, sugerează ce să faci |
+| `@plan [task]` | Creează doar planul |
+| `@validate` | Validează un plan existent |
+| `@review` | Code review pe schimbări |
+| `@fix` | Fix issues din review |
+| `@test` | Scrie teste |
+| `@docs` | Scrie documentație |
+| `@precommit` | Verificări finale |
+
+### Utility Commands
+
+| Command | Descriere |
+|---------|-----------|
+| `@debug [issue]` | Debugging sistematic |
+| `@hotfix [issue]` | Fix urgent producție |
+| `@refactor` | Îmbunătățește cod fără schimbare comportament |
+| `@health` | Project health check |
+| `@brief` | Creează app-truth.md |
+| `@interface` | Creează componente UI |
+
+## 🔄 Auto-Pilot Workflow
+
 ```
-@code_review.md
-@0001_PLAN.md
+@auto "Add dark mode"
+         │
+         ▼
+    ┌─────────┐
+    │ ANALYZE │ → Citește app-truth.md, înțelege contextul
+    └────┬────┘
+         ▼
+    ┌─────────┐
+    │  PLAN   │ → Creează plan detaliat (auto-validat)
+    └────┬────┘
+         ▼
+    ┌─────────┐
+    │IMPLEMENT│ → Scrie codul, fix lint errors
+    └────┬────┘
+         ▼
+    ┌─────────┐
+    │ REVIEW  │ → Self-review, fix issues (loop max 3x)
+    └────┬────┘
+         ▼
+    ┌─────────┐
+    │  TEST   │ → Scrie și rulează teste
+    └────┬────┘
+         ▼
+    ┌─────────┐
+    │  DOCS   │ → Update documentație
+    └────┬────┘
+         ▼
+    ┌─────────┐
+    │ COMMIT  │ → Pre-commit checks, generează mesaj
+    └────┬────┘
+         ▼
+    ✅ DONE
 ```
 
-## Documentation Writing
-Used to create comprehensive documentation for the plan, review, and implementation.
+## ⚡ Quick Mode Workflow
+
 ```
-@write_docs.md
-@0001_PLAN.md
-@0001_REVIEW.md
+@quick "fix button color"
+         │
+         ▼
+    ┌─────────┐
+    │ ANALYZE │ → Quick analysis
+    └────┬────┘
+         ▼
+    ┌─────────┐
+    │IMPLEMENT│ → Direct implementation
+    └────┬────┘
+         ▼
+    ┌─────────┐
+    │ VERIFY  │ → Lint + Types + Build
+    └────┬────┘
+         ▼
+    ✅ DONE
 ```
 
-## Interface & Design System
-Used to maintain UI/UX consistency, create centralized design systems that enable one-command theme changes, and manage UI components.
-```
-@interface.md
+## 📁 Files Generated
 
-Initialize a centralized design system for our React application. Create design tokens for colors, typography, and spacing. Set up theme provider and ensure all components use tokens instead of hard-coded values.
 ```
+docs/
+├── commands/           # Aceste comenzi
+│   ├── auto.md         # 🤖 Auto-pilot
+│   ├── quick.md        # ⚡ Quick mode
+│   ├── orchestrator.md # 🎯 Manual orchestrator
+│   └── ...             # Alte comenzi
+├── features/           # Feature documentation
+│   ├── 0001_PLAN.md
+│   ├── 0001_REVIEW.md
+│   └── ...
+└── workflow-state.json # Current workflow state
+```
+
+## 🎯 Choosing the Right Command
+
+```
+                    ┌─────────────────┐
+                    │  Ce tip de task? │
+                    └────────┬────────┘
+                             │
+              ┌──────────────┼──────────────┐
+              ▼              ▼              ▼
+        ┌─────────┐    ┌─────────┐    ┌─────────┐
+        │ Feature │    │Bug/Fix  │    │Emergency│
+        │   Nou   │    │  Mic    │    │Production│
+        └────┬────┘    └────┬────┘    └────┬────┘
+             │              │              │
+             ▼              ▼              ▼
+        ┌─────────┐    ┌─────────┐    ┌─────────┐
+        │ @auto   │    │ @quick  │    │ @hotfix │
+        └─────────┘    └─────────┘    └─────────┘
+```
+
+## 🔧 Setup
+
+### 1. Copy Commands
+```bash
+cp -r commands/ your-project/docs/commands/
+```
+
+### 2. Create app-truth.md
+```bash
+# În Cursor:
+@commands/brief
+```
+
+### 3. (Optional) Add .cursorrules
+```bash
+cp commands/.cursorrules your-project/.cursorrules
+```
+
+## 💡 Tips
+
+### Pentru cele mai bune rezultate:
+
+1. **Fii specific în task description:**
+   ```
+   # Bun
+   @auto Add OAuth2 login with Google provider, store tokens in httpOnly cookies
+   
+   # Mai puțin bun
+   @auto Add login
+   ```
+
+2. **Folosește @quick pentru iterații:**
+   ```
+   @auto Add user profile page      # Prima dată
+   @quick fix avatar upload         # Iterații
+   @quick add bio field             # Iterații
+   ```
+
+3. **Verifică starea dacă ceva nu merge:**
+   ```
+   # Vezi unde a rămas workflow-ul
+   cat docs/workflow-state.json
+   
+   # Continuă de unde a rămas
+   @continue
+   ```
+
+## 🚨 Error Handling
+
+### Auto-recoverable:
+- Lint errors → auto-fix
+- Type errors → auto-fix
+- Failed tests → debug & retry (3x)
+
+### Manual intervention:
+- Build complet broken
+- Circular dependencies
+- Security vulnerabilities
+
+### Resume after manual fix:
+```
+@continue
+```
+
+## 📊 Timing Estimates
+
+| Task Type | @auto | @quick |
+|-----------|-------|--------|
+| Small fix | 30-60s | 10-20s |
+| UI component | 2-3 min | 30-60s |
+| API endpoint | 2-4 min | 1-2 min |
+| Full feature | 3-5 min | N/A |
+
+## 🔄 Version History
+
+- **v2.0** - Auto-pilot mode, quick mode, state tracking
+- **v1.0** - Manual orchestrator workflow
+
+---
+
+**Made for maximum efficiency in Cursor.**

@@ -1,0 +1,21 @@
+<svg width="760" height="180" viewBox="0 0 760 180" fill="none" xmlns="http://www.w3.org/2000/svg">
+<!--ICON as "N" (lighter, Apple-like)-->
+    <g transform="translate(36,18)">
+<!--elegant N-->
+        <path d="M18 142V18
+             L112 118
+             V18" stroke="#0D1412" stroke-width="22" stroke-linecap="round" stroke-linejoin="round"/>
+<!--small grneb leaf accent (subtle)-->
+        <path d="M88 76
+             C104 74 116 62 118 46
+             C102 48 90 60 88 76 Z" fill="#1F8A5B"/>
+    </g>
+<!--WORDMARK without N, closer to icon-->
+    <text x="168" y="108" font-family="Inter, system-ui, -apple-system, Segoe UI, Arial" font-size="92" font-weight="700" fill="#0D1412" letter-spacing="0.2">
+    ihao
+  </text>
+<!--TAGLINE without exchange-->
+    <text x="170" y="148" font-family="Inter, system-ui, -apple-system, Segoe UI, Arial" font-size="22" font-weight="500" fill="#39413F" letter-spacing="2.4">
+    CARBON CERTIFICATES
+  </text>
+</svg>

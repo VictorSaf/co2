@@ -3,7 +3,7 @@ import { subDays, format, startOfDay, subYears } from 'date-fns';
 import { MarketStatistics } from '../types';
 import { useCertificates } from './CertificateContext';
 import { fetchEUAPriceWithRetry, POLLING_INTERVAL, fetchEUAHistory } from '../services/euaPriceService';
-import { fetchCERPriceWithRetry, fetchCERHistory } from '../services/cerPriceService';
+import { fetchCEAPriceWithRetry, fetchCEAHistory } from '../services/ceaPriceService';
 
 interface StatsContextType {
   marketStats: MarketStatistics;
@@ -14,7 +14,7 @@ interface StatsContextType {
     lastUpdated: Date | null;
     change24h: number | null;
   };
-  realTimeCER: {
+  realTimeCEA: {
     price: number | null;
     isLoading: boolean;
     error: string | null;
@@ -22,7 +22,7 @@ interface StatsContextType {
     change24h: number | null;
   };
   refreshEUAPrice: () => Promise<void>;
-  refreshCERPrice: () => Promise<void>;
+  refreshCEAPrice: () => Promise<void>;
 }
 
 const StatsContext = createContext<StatsContextType | undefined>(undefined);
@@ -36,16 +36,16 @@ const generateFallbackPriceHistory = () => {
     const date = subDays(today, numDays - i - 1);
     
     // Generate slightly random prices with an overall upward trend
-    const basePriceCER = 36 + (i / numDays) * 5; // Start at 36, trend toward 41
+    const basePriceCEA = 36 + (i / numDays) * 5; // Start at 36, trend toward 41
     const basePriceEUA = 55 + (i / numDays) * 7; // Start at 55, trend toward 62
     
     // Add random daily variation of up to +/- 1.5 EUR
-    const priceCER = parseFloat((basePriceCER + (Math.random() * 3 - 1.5)).toFixed(2));
+    const priceCEA = parseFloat((basePriceCEA + (Math.random() * 3 - 1.5)).toFixed(2));
     const priceEUA = parseFloat((basePriceEUA + (Math.random() * 3 - 1.5)).toFixed(2));
     
     return {
       date,
-      priceCER,
+      priceCEA,
       priceEUA
     };
   });
@@ -54,9 +54,9 @@ const generateFallbackPriceHistory = () => {
 export function StatsProvider({ children }: { children: ReactNode }) {
   const { marketOffers, transactions } = useCertificates();
   const [marketStats, setMarketStats] = useState<MarketStatistics>({
-    averagePriceCER: 0,
+    averagePriceCEA: 0,
     averagePriceEUA: 0,
-    volumeCER: 0,
+    volumeCEA: 0,
     volumeEUA: 0,
     priceHistory: generateFallbackPriceHistory()
   });
@@ -72,8 +72,8 @@ export function StatsProvider({ children }: { children: ReactNode }) {
     change24h: null as number | null,
   });
 
-  // Real-time CER price state
-  const [realTimeCER, setRealTimeCER] = useState({
+  // Real-time CEA price state
+  const [realTimeCEA, setRealTimeCEA] = useState({
     price: null as number | null,
     isLoading: false,
     error: null as string | null,
@@ -82,7 +82,7 @@ export function StatsProvider({ children }: { children: ReactNode }) {
   });
 
   const pollingIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const cerPollingIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const ceaPollingIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const isInitializedRef = useRef(false);
   
   // Load historical data on mount
@@ -99,23 +99,23 @@ export function StatsProvider({ children }: { children: ReactNode }) {
         const endDate = new Date();
         const startDate = subYears(endDate, 5);
         
-        // Fetch both EUA and CER historical data
-        const [euaHistory, cerHistory] = await Promise.all([
+        // Fetch both EUA and CEA historical data
+        const [euaHistory, ceaHistory] = await Promise.all([
           fetchEUAHistory(startDate, endDate),
-          fetchCERHistory(startDate, endDate)
+          fetchCEAHistory(startDate, endDate)
         ]);
         
-        if (euaHistory && cerHistory && euaHistory.length > 0 && cerHistory.length > 0) {
+        if (euaHistory && ceaHistory && euaHistory.length > 0 && ceaHistory.length > 0) {
           // Create a map for efficient lookup
           const euaMap = new Map(euaHistory.map(entry => [entry.date, entry.price]));
-          const cerMap = new Map(cerHistory.map(entry => [entry.date, entry.price]));
+          const ceaMap = new Map(ceaHistory.map(entry => [entry.date, entry.price]));
           
           // Combine data into the format expected by MarketStatistics
           const combinedHistory = euaHistory.map(euaEntry => {
-            const cerPrice = cerMap.get(euaEntry.date) || null;
+            const ceaPrice = ceaMap.get(euaEntry.date) || null;
             return {
               date: new Date(euaEntry.date),
-              priceCER: cerPrice || (euaEntry.price * 0.6), // Fallback: 40% discount if CER missing
+              priceCEA: ceaPrice || (euaEntry.price * 0.6), // Fallback: 40% discount if CEA missing
               priceEUA: euaEntry.price
             };
           });
@@ -162,14 +162,14 @@ export function StatsProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  // Fetch real-time CER price
-  const fetchRealTimeCER = async () => {
-    setRealTimeCER(prev => ({ ...prev, isLoading: true, error: null }));
+  // Fetch real-time CEA price
+  const fetchRealTimeCEA = async () => {
+    setRealTimeCEA(prev => ({ ...prev, isLoading: true, error: null }));
     
-    const priceData = await fetchCERPriceWithRetry();
+    const priceData = await fetchCEAPriceWithRetry();
     
     if (priceData) {
-      setRealTimeCER({
+      setRealTimeCEA({
         price: priceData.price,
         isLoading: false,
         error: null,
@@ -177,10 +177,10 @@ export function StatsProvider({ children }: { children: ReactNode }) {
         change24h: priceData.change24h || null,
       });
     } else {
-      setRealTimeCER(prev => ({
+      setRealTimeCEA(prev => ({
         ...prev,
         isLoading: false,
-        error: 'Failed to fetch real-time CER price. Using market data.',
+        error: 'Failed to fetch real-time CEA price. Using market data.',
       }));
     }
   };
@@ -190,26 +190,26 @@ export function StatsProvider({ children }: { children: ReactNode }) {
     await fetchRealTimeEUA();
   };
 
-  const refreshCERPrice = async () => {
-    await fetchRealTimeCER();
+  const refreshCEAPrice = async () => {
+    await fetchRealTimeCEA();
   };
 
   // Initialize real-time price fetching and set up polling
   useEffect(() => {
     if (!isInitializedRef.current) {
       isInitializedRef.current = true;
-      // Initial fetch for both EUA and CER
+      // Initial fetch for both EUA and CEA
       fetchRealTimeEUA();
-      fetchRealTimeCER();
+      fetchRealTimeCEA();
       
       // Set up polling for EUA
       pollingIntervalRef.current = setInterval(() => {
         fetchRealTimeEUA();
       }, POLLING_INTERVAL);
       
-      // Set up polling for CER
-      cerPollingIntervalRef.current = setInterval(() => {
-        fetchRealTimeCER();
+      // Set up polling for CEA
+      ceaPollingIntervalRef.current = setInterval(() => {
+        fetchRealTimeCEA();
       }, POLLING_INTERVAL);
     }
 
@@ -218,9 +218,9 @@ export function StatsProvider({ children }: { children: ReactNode }) {
         clearInterval(pollingIntervalRef.current);
         pollingIntervalRef.current = null;
       }
-      if (cerPollingIntervalRef.current) {
-        clearInterval(cerPollingIntervalRef.current);
-        cerPollingIntervalRef.current = null;
+      if (ceaPollingIntervalRef.current) {
+        clearInterval(ceaPollingIntervalRef.current);
+        ceaPollingIntervalRef.current = null;
       }
     };
   }, []);
@@ -228,12 +228,12 @@ export function StatsProvider({ children }: { children: ReactNode }) {
   // Update market statistics whenever offers or transactions change
   useEffect(() => {
     // Calculate average prices from market offers
-    const cerOffers = marketOffers.filter(offer => offer.type === 'CER');
+    const ceaOffers = marketOffers.filter(offer => offer.type === 'CEA');
     const euaOffers = marketOffers.filter(offer => offer.type === 'EUA');
     
-    const averagePriceCER = cerOffers.length > 0 
-      ? parseFloat((cerOffers.reduce((sum, offer) => sum + offer.price, 0) / cerOffers.length).toFixed(2))
-      : marketStats.averagePriceCER;
+    const averagePriceCEA = ceaOffers.length > 0 
+      ? parseFloat((ceaOffers.reduce((sum, offer) => sum + offer.price, 0) / ceaOffers.length).toFixed(2))
+      : marketStats.averagePriceCEA;
     
     // Use real-time EUA price if available, otherwise fall back to market offers average
     let averagePriceEUA: number;
@@ -249,8 +249,8 @@ export function StatsProvider({ children }: { children: ReactNode }) {
     const yesterday = subDays(new Date(), 1);
     const recentTransactions = transactions.filter(tx => tx.timestamp > yesterday);
     
-    const volumeCER = recentTransactions
-      .filter(tx => tx.certificateType === 'CER')
+    const volumeCEA = recentTransactions
+      .filter(tx => tx.certificateType === 'CEA')
       .reduce((sum, tx) => sum + tx.amount, 0);
     
     const volumeEUA = recentTransactions
@@ -270,14 +270,14 @@ export function StatsProvider({ children }: { children: ReactNode }) {
       // Update today's entry with latest prices
       priceHistory[todayIndex] = {
         ...priceHistory[todayIndex],
-        priceCER: averagePriceCER || priceHistory[todayIndex].priceCER,
+        priceCEA: averagePriceCEA || priceHistory[todayIndex].priceCEA,
         priceEUA: averagePriceEUA || priceHistory[todayIndex].priceEUA
       };
     } else {
       // Add today's entry if it doesn't exist
       priceHistory.push({
         date: today,
-        priceCER: averagePriceCER || 0,
+        priceCEA: averagePriceCEA || 0,
         priceEUA: averagePriceEUA || 0
       });
       
@@ -290,9 +290,9 @@ export function StatsProvider({ children }: { children: ReactNode }) {
     }
     
     setMarketStats({
-      averagePriceCER,
+      averagePriceCEA,
       averagePriceEUA,
-      volumeCER,
+      volumeCEA,
       volumeEUA,
       priceHistory
     });
@@ -300,7 +300,7 @@ export function StatsProvider({ children }: { children: ReactNode }) {
   }, [marketOffers, transactions, realTimeEUA.price]);
 
   return (
-    <StatsContext.Provider value={{ marketStats, realTimeEUA, realTimeCER, refreshEUAPrice, refreshCERPrice }}>
+    <StatsContext.Provider value={{ marketStats, realTimeEUA, realTimeCEA, refreshEUAPrice, refreshCEAPrice }}>
       {children}
     </StatsContext.Provider>
   );

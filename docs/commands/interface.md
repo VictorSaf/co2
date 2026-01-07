@@ -1,70 +1,140 @@
-# Interface & Design System
+---
+description: Create UI components and interfaces
+globs:
+alwaysApply: false
+---
 
-Your task is to maintain UI/UX consistency, create centralized design systems that enable one-command theme changes, manage themes and components, and ensure all features integrate seamlessly into the application's user interface.
+# Interface - UI Component Creation
 
-## Core Principle
+Create user interface components using the design system.
 
-The design system MUST be centralized so that changing a theme or design token in ONE place automatically updates ALL components across the entire application. Components must NEVER use hard-coded colors, spacing, or typography—they MUST reference design tokens.
+## Design System First
 
-## Steps
+**ALWAYS check `src/design-system/` for existing components before creating new ones.**
 
-1. Analyze the current UI/UX state:
-   - Check `app-truth.md` for existing UI/UX standards
-   - Review existing component structure and styling approach
-   - Identify current design tokens (if any)
-   - Note any hard-coded values that need refactoring
+### Available Components
+```typescript
+import { 
+  Button, 
+  Input, 
+  Card, 
+  Badge, 
+  Modal, 
+  Tooltip, 
+  Table, 
+  Form 
+} from '@/design-system';
+```
 
-2. Create or maintain centralized design tokens in a single source file (e.g., `src/design-system/tokens.ts`):
-   - Colors (primary, secondary, text, background, etc.)
-   - Typography (font families, sizes, weights, line heights)
-   - Spacing scale
-   - Shadows, border radius, transitions
-   - Breakpoints and z-index values
+### Design Tokens
+```typescript
+import { 
+  colors, 
+  typography, 
+  spacing, 
+  shadows, 
+  borders,
+  transitions 
+} from '@/design-system/tokens';
+```
 
-3. Set up theme system:
-   - Create theme configuration (light, dark, custom themes)
-   - Set up theme provider for the application
-   - Ensure all components access tokens through theme provider
+## Process
 
-4. For feature UI integration:
-   - Review feature requirements from plan
-   - Identify required UI components
-   - Create UI specifications if needed
-   - Ensure components use design tokens
-   - Verify accessibility and responsive behavior
+1. **Check Design System** - Existing components?
+2. **Wireframe** - Layout structure
+3. **Component** - Build with tokens
+4. **States** - All interaction states
+5. **A11y** - Accessibility check
 
-5. For research requests:
-   - Research modern UI libraries and design systems
-   - Compare options and provide recommendations
-   - Include implementation guidance
+## Component States
 
-## Rules
+Every component should handle:
+- `default` - Normal state
+- `hover` - Mouse over
+- `active` - Being clicked
+- `focus` - Keyboard focus
+- `disabled` - Not interactive
+- `loading` - Async operation
+- `error` - Validation failed
+- `empty` - No data
 
-1. Components must NEVER use hard-coded design values (colors, spacing, typography, shadows, etc.)
-2. All design values must live in the centralized tokens file
-3. Components must reference tokens through theme provider
-4. All components must support theme switching (light/dark/custom)
-5. Maintain consistency with existing project style and patterns
-6. Follow accessibility standards (WCAG guidelines, keyboard navigation, ARIA attributes)
-7. Ensure responsive design works on all screen sizes
-8. Document design system in `docs/design-system/` if it exists
+## Output Format
 
-## Component Requirements
+```markdown
+# Interface: [Component Name]
 
-When creating or reviewing components, verify:
-- Uses design tokens (no hex colors, no px spacing, no hard-coded fonts)
-- Supports all theme variants
-- Keyboard navigable and screen reader friendly
-- Proper ARIA attributes
-- Responsive on mobile, tablet, and desktop
-- Handles loading, error, and empty states
+## Wireframe
 
-## Output
+```
+┌─────────────────────────────┐
+│ ┌─────┐                     │
+│ │ IMG │  Title Here         │
+│ └─────┘  Subtitle text      │
+│                             │
+│ Description text goes here  │
+│ spanning multiple lines.    │
+│                             │
+│ [Action Button]             │
+└─────────────────────────────┘
+```
 
-1. **Design System Documentation**: Update `docs/design-system/` with tokens, themes, and components
-2. **UI Specifications**: Create `docs/features/<N>_UI_SPEC.md` for feature UI requirements
-3. **Component Implementation**: Create components following project structure, using tokens
-4. **Research Reports**: Create `docs/ui-research/UI_RESEARCH_<topic>_<date>.md` for research findings
-5. **app-truth.md Updates**: Update UI/UX section with design system location, patterns, and standards
+## Component
 
-Prioritize being concise and actionable. Focus on creating a centralized system that enables one-command theme changes.
+```tsx
+import { Button, Card } from '@/design-system';
+import { spacing } from '@/design-system/tokens';
+
+interface UserCardProps {
+  user: User;
+  onAction: () => void;
+}
+
+export function UserCard({ user, onAction }: UserCardProps) {
+  return (
+    <Card className={`p-${spacing.lg}`}>
+      <div className="flex gap-4">
+        <Avatar src={user.avatar} alt={user.name} />
+        <div>
+          <h3 className="text-lg font-semibold">{user.name}</h3>
+          <p className="text-gray-500">{user.email}</p>
+        </div>
+      </div>
+      <p className="mt-4">{user.bio}</p>
+      <Button onClick={onAction} className="mt-4">
+        View Profile
+      </Button>
+    </Card>
+  );
+}
+```
+
+## States
+
+```tsx
+// Loading
+<UserCard.Skeleton />
+
+// Empty
+<Card>
+  <EmptyState message="No user found" />
+</Card>
+
+// Error
+<Card>
+  <ErrorState message="Failed to load user" onRetry={refetch} />
+</Card>
+```
+
+## Accessibility
+
+- [x] Semantic HTML (`article`, `header`, etc.)
+- [x] Keyboard navigation (tab order)
+- [x] ARIA labels for interactive elements
+- [x] Color contrast (4.5:1 minimum)
+- [x] Focus indicators visible
+- [x] Screen reader friendly
+```
+
+---
+
+Describe the UI to create.

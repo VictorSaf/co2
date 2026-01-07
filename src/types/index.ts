@@ -1,10 +1,14 @@
+import type { KYCStatus, RiskLevel } from './kyc';
+
 export type User = {
   id: string;
   username: string;
   balance: number; // in EUR
+  kycStatus?: KYCStatus;
+  riskLevel?: RiskLevel;
 };
 
-export type CertificateType = 'CER' | 'EUA';
+export type CertificateType = 'CEA' | 'EUA';
 
 export type CertificateStatus = 'Available' | 'Converting' | 'Verified';
 
@@ -23,9 +27,9 @@ export type Certificate = {
 
 export type Portfolio = {
   certificates: Certificate[];
-  totalCER: number;
+  totalCEA: number;
   totalEUA: number;
-  convertingCER: number;
+  convertingCEA: number;
 };
 
 export type MarketOffer = {
@@ -50,13 +54,13 @@ export type Transaction = {
 };
 
 export type MarketStatistics = {
-  averagePriceCER: number;
+  averagePriceCEA: number;
   averagePriceEUA: number;
-  volumeCER: number;
+  volumeCEA: number;
   volumeEUA: number;
   priceHistory: {
     date: Date;
-    priceCER: number;
+    priceCEA: number;
     priceEUA: number;
   }[];
 };

@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useStats } from '../context/StatsContext';
+import { useTheme } from '../context/ThemeContext';
 import { format, subMonths, subYears } from 'date-fns';
 import { Chart, ChartOptions, LinearScale, CategoryScale, PointElement, LineElement, BarElement, Tooltip, Legend, Filler } from 'chart.js';
 import { Line, Bar } from 'react-chartjs-2';
 import annotationPlugin from 'chartjs-plugin-annotation';
 import { InformationCircleIcon } from '@heroicons/react/24/outline';
+import { getChartThemeColors } from '../utils/chartTheme';
 
 // Înregistrăm componentele Chart.js necesare
 Chart.register(
@@ -110,13 +112,14 @@ const calculateBollingerBands = (data: number[], period = 20, multiplier = 2) =>
 // Tipuri pentru proprietățile componentei
 interface DataPoint {
   date: Date;
-  priceCER: number;
+  priceCEA: number;
   priceEUA: number;
 }
 
 export default function MarketAnalysis() {
   const { t } = useTranslation();
-  const { marketStats, realTimeCER } = useStats();
+  const { theme } = useTheme();
+  const { marketStats, realTimeCEA } = useStats();
   const [timeframe, setTimeframe] = useState<'1M' | '3M' | '6M' | '1Y' | 'ALL'>('3M');
   const [indicatorType, setIndicatorType] = useState<'price' | 'volume' | 'spread' | 'volatility'>('price');
   const [selectedIndicators, setSelectedIndicators] = useState<{
@@ -134,6 +137,9 @@ export default function MarketAnalysis() {
   const [spreadData, setSpreadData] = useState<{dates: string[], spreads: number[]}>({dates: [], spreads: []});
   const [priceSpreadPercentage, setPriceSpreadPercentage] = useState<number>(0);
   const [showSpreadTooltip, setShowSpreadTooltip] = useState(false);
+  
+  // Get theme colors for charts
+  const themeColors = getChartThemeColors(theme);
   
   // Use real historical data from marketStats
   useEffect(() => {
@@ -159,7 +165,7 @@ export default function MarketAnalysis() {
       })
       .map(entry => ({
         date: entry.date instanceof Date ? entry.date : new Date(entry.date),
-        priceCER: entry.priceCER,
+        priceCEA: entry.priceCEA,
         priceEUA: entry.priceEUA
       }))
       .sort((a, b) => a.date.getTime() - b.date.getTime());
@@ -169,13 +175,13 @@ export default function MarketAnalysis() {
     // Calculate price spread
     if (filteredData.length > 0) {
       const latestData = filteredData[filteredData.length - 1];
-      const spread = latestData.priceEUA - latestData.priceCER;
+      const spread = latestData.priceEUA - latestData.priceCEA;
       const spreadPercentage = (spread / latestData.priceEUA) * 100;
       setPriceSpreadPercentage(parseFloat(spreadPercentage.toFixed(2)));
       
       // Calculate spread data for chart
       const dates = filteredData.map(d => format(d.date, 'dd MMM'));
-      const spreads = filteredData.map(d => parseFloat((d.priceEUA - d.priceCER).toFixed(2)));
+      const spreads = filteredData.map(d => parseFloat((d.priceEUA - d.priceCEA).toFixed(2)));
       setSpreadData({dates, spreads});
     }
     
@@ -223,8 +229,8 @@ export default function MarketAnalysis() {
     labels: historicalData.map(d => format(d.date, 'dd MMM')),
     datasets: [
       {
-        label: t('cerPriceEuro'),
-        data: historicalData.map(d => d.priceCER),
+        label: t('ceaPriceEuro'),
+        data: historicalData.map(d => d.priceCEA),
         borderColor: 'rgb(79, 70, 229)',
         backgroundColor: 'rgba(79, 70, 229, 0.1)',
         borderWidth: 2,
@@ -259,15 +265,17 @@ export default function MarketAnalysis() {
         ticks: {
           maxRotation: 0,
           autoSkip: true,
-          maxTicksLimit: 12
-        }
+          maxTicksLimit: 12,
+          color: themeColors.textColor,
+        },
       },
       y: {
         beginAtZero: false,
         grid: {
-          color: 'rgba(0, 0, 0, 0.05)',
+          color: themeColors.gridColor,
         },
         ticks: {
+          color: themeColors.textColor,
           callback: function(value) {
             return '€' + value;
           },
@@ -280,6 +288,11 @@ export default function MarketAnalysis() {
     },
     plugins: {
       tooltip: {
+        backgroundColor: themeColors.tooltipBg,
+        titleColor: themeColors.tooltipText,
+        bodyColor: themeColors.tooltipText,
+        borderColor: themeColors.tooltipBorder,
+        borderWidth: 1,
         callbacks: {
           label: function(context) {
             return context.dataset.label + ': €' + context.parsed.y.toFixed(2);
@@ -288,6 +301,9 @@ export default function MarketAnalysis() {
       },
       legend: {
         position: 'top',
+        labels: {
+          color: themeColors.textColor,
+        },
       },
     },
   };
@@ -383,23 +399,37 @@ export default function MarketAnalysis() {
         ticks: {
           maxRotation: 0,
           autoSkip: true,
-          maxTicksLimit: 10
-        }
+          maxTicksLimit: 10,
+          color: themeColors.textColor,
+        },
       },
       y: {
         beginAtZero: true,
         suggestedMax: 100,
         grid: {
-          color: 'rgba(0, 0, 0, 0.05)',
-        }
+          color: themeColors.gridColor,
+        },
+        ticks: {
+          color: themeColors.textColor,
+        },
       },
     },
     plugins: {
       tooltip: {
+        backgroundColor: themeColors.tooltipBg,
+        titleColor: themeColors.tooltipText,
+        bodyColor: themeColors.tooltipText,
+        borderColor: themeColors.tooltipBorder,
+        borderWidth: 1,
         callbacks: {
           label: function(context) {
             return context.dataset.label + ': ' + context.parsed.y.toFixed(2);
           },
+        },
+      },
+      legend: {
+        labels: {
+          color: themeColors.textColor,
         },
       },
       annotation: {
@@ -414,7 +444,8 @@ export default function MarketAnalysis() {
             label: {
               display: true,
               content: t('overbought'),
-              position: 'end'
+              position: 'end',
+              color: themeColors.textColor,
             }
           },
           oversoldLine: {
@@ -427,7 +458,8 @@ export default function MarketAnalysis() {
             label: {
               display: true,
               content: t('oversold'),
-              position: 'end'
+              position: 'end',
+              color: themeColors.textColor,
             }
           }
         }
@@ -456,10 +488,10 @@ export default function MarketAnalysis() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="min-h-screen bg-gray-100 dark:bg-gray-900">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6">
-          <h1 className="text-2xl font-semibold text-gray-900">{t('marketAnalysis')}</h1>
+          <h1 className="text-2xl font-semibold text-gray-900 dark:text-gray-100">{t('marketAnalysis')}</h1>
           
           <div className="mt-4 sm:mt-0 flex space-x-2">
             {/* Timeframe selectare */}
@@ -471,8 +503,8 @@ export default function MarketAnalysis() {
                   onClick={() => setTimeframe(tf)}
                   className={`px-3 py-1 text-xs font-medium ${
                     timeframe === tf
-                      ? 'bg-primary-100 text-primary-700 border-primary-300'
-                      : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+                      ? 'bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300 border-primary-300 dark:border-primary-700'
+                      : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'
                   } border ${tf === '1M' ? 'rounded-l-md' : ''} ${tf === 'ALL' ? 'rounded-r-md' : ''}`}
                 >
                   {tf}
@@ -484,57 +516,57 @@ export default function MarketAnalysis() {
         
         {/* Highlights / Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <div className="bg-white rounded-lg shadow p-4">
-            <h3 className="text-sm font-medium text-gray-500">{t('currentEUAPrice')}</h3>
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow dark:shadow-gray-900/50 p-4">
+            <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">{t('currentEUAPrice')}</h3>
             <div className="mt-1 flex items-baseline">
-              <p className="text-2xl font-semibold text-secondary-600">
+              <p className="text-2xl font-semibold text-secondary-600 dark:text-secondary-400">
                 €{marketStats.averagePriceEUA.toFixed(2)}
               </p>
-              <p className="ml-2 text-sm text-green-600">
+              <p className="ml-2 text-sm text-green-600 dark:text-green-400">
                 +{((marketStats.averagePriceEUA / (historicalData.length > 30 ? historicalData[historicalData.length - 30].priceEUA : 60)) * 100 - 100).toFixed(1)}%
               </p>
             </div>
-            <p className="mt-1 text-sm text-gray-500">{t('vs30DaysAgo')}</p>
+            <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">{t('vs30DaysAgo')}</p>
           </div>
           
-          <div className="bg-white rounded-lg shadow p-4">
-            <h3 className="text-sm font-medium text-gray-500">{t('currentCERPrice')}</h3>
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow dark:shadow-gray-900/50 p-4">
+            <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">{t('currentCEAPrice')}</h3>
             <div className="mt-1 flex items-baseline">
-              <p className="text-2xl font-semibold text-primary-600">
-                €{(realTimeCER.price ?? marketStats.averagePriceCER).toFixed(2)}
+              <p className="text-2xl font-semibold text-primary-600 dark:text-primary-400">
+                €{(realTimeCEA.price ?? marketStats.averagePriceCEA).toFixed(2)}
               </p>
-              <p className="ml-2 text-sm text-green-600">
-                +{(((realTimeCER.price ?? marketStats.averagePriceCER) / (historicalData.length > 30 ? historicalData[historicalData.length - 30].priceCER : 40)) * 100 - 100).toFixed(1)}%
+              <p className="ml-2 text-sm text-green-600 dark:text-green-400">
+                +{(((realTimeCEA.price ?? marketStats.averagePriceCEA) / (historicalData.length > 30 ? historicalData[historicalData.length - 30].priceCEA : 40)) * 100 - 100).toFixed(1)}%
               </p>
             </div>
-            <p className="mt-1 text-sm text-gray-500">{t('vs30DaysAgo')}</p>
+            <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">{t('vs30DaysAgo')}</p>
           </div>
           
-          <div className="bg-white rounded-lg shadow p-4">
-            <h3 className="text-sm font-medium text-gray-500">{t('currentPriceSpread')}</h3>
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow dark:shadow-gray-900/50 p-4">
+            <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">{t('currentPriceSpread')}</h3>
             <div className="mt-1">
-              <p className="text-2xl font-semibold text-purple-600">
-                €{(marketStats.averagePriceEUA - (realTimeCER.price ?? marketStats.averagePriceCER)).toFixed(2)}
+              <p className="text-2xl font-semibold text-purple-600 dark:text-purple-400">
+                €{(marketStats.averagePriceEUA - (realTimeCEA.price ?? marketStats.averagePriceCEA)).toFixed(2)}
               </p>
             </div>
             <div className="mt-1 flex items-center gap-1 relative">
-              <p className="text-sm text-gray-500">{priceSpreadPercentage}% {t('spreadPercentage')}</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">{priceSpreadPercentage}% {t('spreadPercentage')}</p>
               <div 
                 className="relative"
                 onMouseEnter={() => setShowSpreadTooltip(true)}
                 onMouseLeave={() => setShowSpreadTooltip(false)}
               >
-                <InformationCircleIcon className="h-4 w-4 text-gray-500 cursor-help" />
+                <InformationCircleIcon className="h-4 w-4 text-gray-500 dark:text-gray-400 cursor-help" />
                 {showSpreadTooltip && (
-                  <div className="absolute left-0 bottom-full mb-2 w-80 bg-gray-900 text-white text-xs rounded-lg p-3 shadow-xl z-50">
-                    <p className="mb-2 text-gray-300">{t('minVolumeTrade') || 'Min. volume trade 10 Mio EUR.'}</p>
+                  <div className="absolute left-0 bottom-full mb-2 w-80 bg-gray-900 dark:bg-gray-800 text-white dark:text-gray-100 text-xs rounded-lg p-3 shadow-xl z-50 border border-gray-700 dark:border-gray-600">
+                    <p className="mb-2 text-gray-300 dark:text-gray-400">{t('minVolumeTrade') || 'Min. volume trade 10 Mio EUR.'}</p>
                     <ul className="space-y-1.5">
                       {getVolumeDiscountPrices().map((tier, index) => (
                         <li key={index} className="flex justify-between items-start">
-                          <span className="text-gray-300">{tier.volumeRange}</span>
+                          <span className="text-gray-300 dark:text-gray-400">{tier.volumeRange}</span>
                           <div className="text-right ml-2">
-                            <span className="text-white font-semibold">{tier.discount}% {t('discount') || 'discount'}</span>
-                            <div className="text-white font-bold mt-0.5">
+                            <span className="text-white dark:text-gray-100 font-semibold">{tier.discount}% {t('discount') || 'discount'}</span>
+                            <div className="text-white dark:text-gray-100 font-bold mt-0.5">
                               €{tier.price.toFixed(2)}
                             </div>
                           </div>
@@ -543,7 +575,7 @@ export default function MarketAnalysis() {
                     </ul>
                     {/* Arrow pointer */}
                     <div className="absolute top-full left-4 -mt-1">
-                      <div className="w-2 h-2 bg-gray-900 transform rotate-45"></div>
+                      <div className="w-2 h-2 bg-gray-900 dark:bg-gray-800 transform rotate-45"></div>
                     </div>
                   </div>
                 )}
@@ -551,31 +583,31 @@ export default function MarketAnalysis() {
             </div>
           </div>
           
-          <div className="bg-white rounded-lg shadow p-4">
-            <h3 className="text-sm font-medium text-gray-500">{t('marketStatus')}</h3>
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow dark:shadow-gray-900/50 p-4">
+            <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">{t('marketStatus')}</h3>
             <div className="mt-1">
-              <p className="text-2xl font-semibold text-amber-600">
+              <p className="text-2xl font-semibold text-amber-600 dark:text-amber-400">
                 {priceSpreadPercentage > 25 ? t('arbitrageOpportunity') : t('stableMarket')}
               </p>
             </div>
-            <p className="mt-1 text-sm text-gray-500">
+            <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
               {priceSpreadPercentage > 25 
-                ? t('favorableForCERConversion') 
+                ? t('favorableForCEAConversion') 
                 : t('normalTradingConditions')}
             </p>
           </div>
         </div>
         
         {/* Tab Selector pentru indicatori */}
-        <div className="bg-white rounded-lg shadow mb-6">
-          <div className="border-b border-gray-200">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow dark:shadow-gray-900/50 mb-6">
+          <div className="border-b border-gray-200 dark:border-gray-700">
             <nav className="-mb-px flex">
               <button
                 onClick={() => setIndicatorType('price')}
                 className={`${
                   indicatorType === 'price'
-                    ? 'border-primary-500 text-primary-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    ? 'border-primary-500 text-primary-600 dark:text-primary-400'
+                    : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600'
                 } w-1/4 py-4 px-1 text-center border-b-2 font-medium text-sm`}
               >
                 {t('priceChart')}
@@ -584,8 +616,8 @@ export default function MarketAnalysis() {
                 onClick={() => setIndicatorType('spread')}
                 className={`${
                   indicatorType === 'spread'
-                    ? 'border-primary-500 text-primary-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    ? 'border-primary-500 text-primary-600 dark:text-primary-400'
+                    : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600'
                 } w-1/4 py-4 px-1 text-center border-b-2 font-medium text-sm`}
               >
                 {t('spreadAnalysis')}
@@ -594,8 +626,8 @@ export default function MarketAnalysis() {
                 onClick={() => setIndicatorType('volatility')}
                 className={`${
                   indicatorType === 'volatility'
-                    ? 'border-primary-500 text-primary-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    ? 'border-primary-500 text-primary-600 dark:text-primary-400'
+                    : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600'
                 } w-1/4 py-4 px-1 text-center border-b-2 font-medium text-sm`}
               >
                 {t('volatilityAnalysis')}
@@ -605,8 +637,8 @@ export default function MarketAnalysis() {
                   onClick={() => setIndicatorType('volume')}
                   className={`${
                     indicatorType === 'volume'
-                      ? 'border-primary-500 text-primary-600'
-                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                      ? 'border-primary-500 text-primary-600 dark:text-primary-400'
+                      : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600'
                   } w-1/4 py-4 px-1 text-center border-b-2 font-medium text-sm`}
                 >
                   RSI
@@ -618,9 +650,9 @@ export default function MarketAnalysis() {
         
         {/* Main Chart Section */}
         <div className="grid grid-cols-1 gap-6 mb-8">
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow dark:shadow-gray-900/50 p-6">
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-lg font-medium text-gray-900">
+              <h2 className="text-lg font-medium text-gray-900 dark:text-gray-100">
                 {indicatorType === 'price' && t('priceEvolution')}
                 {indicatorType === 'spread' && t('priceSpreadEvolution')}
                 {indicatorType === 'volatility' && t('priceVolatilityAnalysis')}
@@ -639,7 +671,7 @@ export default function MarketAnalysis() {
                       bollingerBands: !selectedIndicators.bollingerBands
                     })}
                   />
-                  <span className="ml-2 text-sm text-gray-700">{t('bollingerBands')}</span>
+                  <span className="ml-2 text-sm text-gray-700 dark:text-gray-300">{t('bollingerBands')}</span>
                 </label>
                 <label className="inline-flex items-center">
                   <input
@@ -651,7 +683,7 @@ export default function MarketAnalysis() {
                       rsi: !selectedIndicators.rsi
                     })}
                   />
-                  <span className="ml-2 text-sm text-gray-700">RSI</span>
+                  <span className="ml-2 text-sm text-gray-700 dark:text-gray-300">RSI</span>
                 </label>
               </div>
             </div>
@@ -673,6 +705,8 @@ export default function MarketAnalysis() {
                       y: {
                         ...chartOptions.scales?.y,
                         ticks: {
+                          ...chartOptions.scales?.y?.ticks,
+                          color: themeColors.textColor,
                           callback: function(value) {
                             return value + '%';
                           }
@@ -690,17 +724,17 @@ export default function MarketAnalysis() {
         </div>
         
         {/* Market Insights Section */}
-        <div className="bg-white rounded-lg shadow p-6 mb-8">
-          <h2 className="text-lg font-medium text-gray-900 mb-4">{t('marketInsights')}</h2>
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow dark:shadow-gray-900/50 p-6 mb-8">
+          <h2 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">{t('marketInsights')}</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="border rounded-lg p-4 bg-gray-50">
-              <h3 className="text-md font-medium text-gray-800 mb-2">{t('euaMarketTrend')}</h3>
-              <p className="text-sm text-gray-600 mb-3">
+            <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 bg-gray-50 dark:bg-gray-700/50">
+              <h3 className="text-md font-medium text-gray-800 dark:text-gray-200 mb-2">{t('euaMarketTrend')}</h3>
+              <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
                 {historicalData.length > 30 && historicalData[historicalData.length - 1].priceEUA > historicalData[historicalData.length - 30].priceEUA
                   ? t('bullishTrendEUA')
                   : t('bearishTrendEUA')}
               </p>
-              <div className="flex justify-between text-xs text-gray-500">
+              <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400">
                 <span>{t('30DayChange')}: {historicalData.length > 30 
                   ? ((historicalData[historicalData.length - 1].priceEUA / historicalData[historicalData.length - 30].priceEUA - 1) * 100).toFixed(2)
                   : "0.00"}%</span>
@@ -710,16 +744,16 @@ export default function MarketAnalysis() {
               </div>
             </div>
             
-            <div className="border rounded-lg p-4 bg-gray-50">
-              <h3 className="text-md font-medium text-gray-800 mb-2">{t('cerMarketTrend')}</h3>
-              <p className="text-sm text-gray-600 mb-3">
-                {historicalData.length > 30 && historicalData[historicalData.length - 1].priceCER > historicalData[historicalData.length - 30].priceCER
-                  ? t('bullishTrendCER')
-                  : t('bearishTrendCER')}
+            <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 bg-gray-50 dark:bg-gray-700/50">
+              <h3 className="text-md font-medium text-gray-800 dark:text-gray-200 mb-2">{t('ceaMarketTrend')}</h3>
+              <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
+                {historicalData.length > 30 && historicalData[historicalData.length - 1].priceCEA > historicalData[historicalData.length - 30].priceCEA
+                  ? t('bullishTrendCEA')
+                  : t('bearishTrendCEA')}
               </p>
-              <div className="flex justify-between text-xs text-gray-500">
+              <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400">
                 <span>{t('30DayChange')}: {historicalData.length > 30 
-                  ? ((historicalData[historicalData.length - 1].priceCER / historicalData[historicalData.length - 30].priceCER - 1) * 100).toFixed(2)
+                  ? ((historicalData[historicalData.length - 1].priceCEA / historicalData[historicalData.length - 30].priceCEA - 1) * 100).toFixed(2)
                   : "0.00"}%</span>
                 <span>{t('conversionProfitability')}: {priceSpreadPercentage > 20 ? t('high') : priceSpreadPercentage > 10 ? t('medium') : t('low')}</span>
               </div>
@@ -728,32 +762,32 @@ export default function MarketAnalysis() {
         </div>
         
         {/* Forecast & Recommendation */}
-        <div className="bg-white rounded-lg shadow p-6">
-          <h2 className="text-lg font-medium text-gray-900 mb-4">{t('forecastRecommendation')}</h2>
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow dark:shadow-gray-900/50 p-6">
+          <h2 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">{t('forecastRecommendation')}</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="border-r pr-6">
-              <h3 className="text-md font-medium text-gray-800 mb-2">{t('shortTermForecast')}</h3>
+            <div className="border-r border-gray-200 dark:border-gray-700 pr-6">
+              <h3 className="text-md font-medium text-gray-800 dark:text-gray-200 mb-2">{t('shortTermForecast')}</h3>
               <div className="flex items-center mb-2">
                 <div className={`w-3 h-3 rounded-full mr-2 ${
                   priceVolatilityData.slice(-7).reduce((sum, val) => sum + val, 0) > 0 
                     ? 'bg-green-500' 
                     : 'bg-red-500'
                 }`}></div>
-                <p className="text-sm font-medium">
+                <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
                   {priceVolatilityData.slice(-7).reduce((sum, val) => sum + val, 0) > 0 
                     ? t('bullish') 
                     : t('bearish')}
                 </p>
               </div>
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-gray-600 dark:text-gray-400">
                 {priceVolatilityData.slice(-7).reduce((sum, val) => sum + val, 0) > 0 
                   ? t('shortTermBullishForecast') 
                   : t('shortTermBearishForecast')}
               </p>
             </div>
             
-            <div className="border-r px-6">
-              <h3 className="text-md font-medium text-gray-800 mb-2">{t('spreadOpportunity')}</h3>
+            <div className="border-r border-gray-200 dark:border-gray-700 px-6">
+              <h3 className="text-md font-medium text-gray-800 dark:text-gray-200 mb-2">{t('spreadOpportunity')}</h3>
               <div className="flex items-center mb-2">
                 <div className={`w-3 h-3 rounded-full mr-2 ${
                   priceSpreadPercentage > 20 
@@ -762,7 +796,7 @@ export default function MarketAnalysis() {
                     ? 'bg-yellow-500' 
                     : 'bg-red-500'
                 }`}></div>
-                <p className="text-sm font-medium">
+                <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
                   {priceSpreadPercentage > 20 
                     ? t('excellent') 
                     : priceSpreadPercentage > 10 
@@ -770,7 +804,7 @@ export default function MarketAnalysis() {
                     : t('poor')}
                 </p>
               </div>
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-gray-600 dark:text-gray-400">
                 {priceSpreadPercentage > 20 
                   ? t('excellentArbitrageOpportunity') 
                   : priceSpreadPercentage > 10 
@@ -780,20 +814,20 @@ export default function MarketAnalysis() {
             </div>
             
             <div className="pl-6">
-              <h3 className="text-md font-medium text-gray-800 mb-2">{t('tradingRecommendation')}</h3>
+              <h3 className="text-md font-medium text-gray-800 dark:text-gray-200 mb-2">{t('tradingRecommendation')}</h3>
               <div className="flex items-center mb-2">
                 <div className="w-3 h-3 rounded-full mr-2 bg-primary-500"></div>
-                <p className="text-sm font-medium">
+                <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
                   {priceSpreadPercentage > 20 
-                    ? t('convertCERtoEUA') 
+                    ? t('convertCEAtoEUA') 
                     : (historicalData.length > 0 && priceVolatilityData.slice(-7).reduce((sum, val) => sum + val, 0) > 0)
                     ? t('buyAndHold')
                     : t('waitAndMonitor')}
                 </p>
               </div>
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-gray-600 dark:text-gray-400">
                 {priceSpreadPercentage > 20 
-                  ? t('convertCERRecommendation') 
+                  ? t('convertCEARecommendation') 
                   : (historicalData.length > 0 && priceVolatilityData.slice(-7).reduce((sum, val) => sum + val, 0) > 0)
                   ? t('buyAndHoldRecommendation')
                   : t('waitAndMonitorRecommendation')}

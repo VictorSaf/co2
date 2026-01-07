@@ -27,11 +27,18 @@ export default defineConfig({
     hmr: {
       host: 'localhost',
       port: Number((globalThis as { process?: { env?: { PORT?: string } } }).process?.env?.PORT) || 3000,
-      protocol: 'ws'
+      protocol: 'ws',
+      // Reduce HMR errors by being more lenient with chunk loading
+      overlay: false // Disable error overlay for HMR issues (we handle them manually)
+    },
+    // Watch options to reduce unnecessary reloads
+    watch: {
+      // Ignore node_modules to reduce file watching overhead
+      ignored: ['**/node_modules/**', '**/dist/**']
     },
     proxy: {
       '/api': {
-        target: 'http://localhost:5000',
+        target: 'http://localhost:5001',
         changeOrigin: true,
         rewrite: (path) => path
       }

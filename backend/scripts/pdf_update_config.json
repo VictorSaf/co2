@@ -1,0 +1,55 @@
+{
+  "company_data": {
+    "provider_name": "Italy Nihao Group Limited （HK)/Nihao Carbon Certificates",
+    "company_name": "Italy Nihao Group Limited （HK）",
+    "address": "RM 905 WORKINGBERG COMM BLDG, 41-47 MARBLE RD, HONG KONG",
+    "phone": "TEL 00852-3062 3366",
+    "email": "info@nihao-carbon.com",
+    "jurisdiction": "Hong Kong"
+  },
+  "trading_parameters": {
+    "order_types": "Market Order only",
+    "time_in_force": "FOK (Fill or Kill) only",
+    "order_submission_method": "Electronic Trading Platform only",
+    "execution_venues": "OTC Markets only"
+  },
+  "fees": {
+    "cer_transaction_fee": "2%",
+    "eua_spot_transaction_fee": "5%",
+    "registry_transfer_fee": "2%",
+    "account_maintenance_fee": "Zero (0%)"
+  },
+  "settlement": {
+    "standard_settlement_spot": "T+4",
+    "conversion_settlement": "T+2",
+    "settlement_period": "T+2"
+  },
+  "complaint_handling": {
+    "methods": "email, post, and telephone",
+    "company_contact": {
+      "address": "RM 905 WORKINGBERG COMM BLDG, 41-47 MARBLE RD, HONG KONG",
+      "phone": "TEL 00852-3062 3366",
+      "email": "complaints@nihao-carbon.com"
+    },
+    "financial_ombudsman": {
+      "name": "The Ombudsman, Hong Kong",
+      "address": "30/F, China Merchants Tower, Shun Tak Centre, 168-200 Connaught Road Central, Hong Kong",
+      "telephone": "(852) 2629 0555",
+      "email": "complaints@ombudsman.hk",
+      "website": "https://www.ombudsman.hk/contact_us/?lang=en"
+    }
+  },
+  "emergency_contacts": {
+    "address": "RM 905 WORKINGBERG COMM BLDG, 41-47 MARBLE RD, HONG KONG",
+    "phone": "TEL 00852-3062 3366"
+  },
+  "client_money_segregation": {
+    "account_name": "Italy Nihao Group Limited",
+    "account_number": "053532610838",
+    "beneficiary_bank_name": "HSBC Hong Kong",
+    "bank_address": "1 Queen's Road, Central, Hong Kong",
+    "swift_code": "HSBCHKHHHKH",
+    "note": "Client funds are held in segregated accounts"
+  }
+}
+

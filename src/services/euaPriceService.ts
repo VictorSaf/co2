@@ -32,6 +32,16 @@ const BACKEND_API_URL = import.meta.env.VITE_BACKEND_API_URL ||
 let lastKnownPrice = 75.0;
 const priceHistory: number[] = [75.0];
 
+// Request deduplication and caching for EUA price
+let euaPriceCache: { data: EUAPriceResponse; timestamp: number } | null = null;
+let euaPricePromise: Promise<EUAPriceResponse | null> | null = null;
+const EUA_PRICE_CACHE_TTL = 60000; // Cache for 60 seconds (1 minute) - prices don't change that frequently
+
+// Request deduplication and caching for EUA history
+let euaHistoryCache: { data: HistoricalPriceEntry[]; timestamp: number; params: string } | null = null;
+let euaHistoryPromise: Promise<HistoricalPriceEntry[] | null> | null = null;
+const EUA_HISTORY_CACHE_TTL = 300000; // Cache for 5 minutes - historical data changes rarely
+
 /**
  * Generates realistic fallback price based on market trends
  * Used when backend API is unavailable
@@ -64,45 +74,103 @@ function generateRealisticPrice(): EUAPriceResponse {
 /**
  * Fetches the latest EU ETS (EUA) carbon price from Python backend API
  * Falls back to realistic simulation if backend is unavailable
+ * 
+ * Features:
+ * - Request deduplication: If a request is already in progress, returns the same promise
+ * - Short-term caching: Caches results for 60 seconds to prevent duplicate requests
+ * - Rate limit handling: Handles 429 errors gracefully with fallback
+ * 
  * @returns Promise with price data
  */
 export async function fetchEUAPrice(): Promise<EUAPriceResponse | null> {
-  try {
-    // Call Python backend API
-    const apiPath = BACKEND_API_URL.startsWith('/') 
-      ? `${BACKEND_API_URL}/eua/price` 
-      : `${BACKEND_API_URL}/api/eua/price`;
-    const response = await axios.get(apiPath, {
-      timeout: 10000, // 10 second timeout
-      headers: {
-        'Accept': 'application/json',
-      },
-    });
-
-    if (response.data && response.data.price) {
-      const priceData: EUAPriceResponse = {
-        price: parseFloat(response.data.price.toFixed(2)),
-        timestamp: new Date(response.data.timestamp),
-        currency: response.data.currency || 'EUR',
-        change24h: response.data.change24h ? parseFloat(response.data.change24h.toFixed(2)) : undefined,
-      };
-
-      // Update cache for fallback
-      lastKnownPrice = priceData.price;
-      priceHistory.push(priceData.price);
-      if (priceHistory.length > 100) priceHistory.shift();
-
-      return priceData;
-    }
-
-    // If response doesn't have expected format, fall back
-    console.warn('Backend API returned unexpected format, using fallback');
-    return generateRealisticPrice();
-  } catch (error) {
-    console.warn('Error fetching EUA price from backend, using fallback:', error);
-    // Always return a price, even if it's simulated
-    return generateRealisticPrice();
+  // Check cache first (if within TTL)
+  const now = Date.now();
+  if (euaPriceCache && (now - euaPriceCache.timestamp) < EUA_PRICE_CACHE_TTL) {
+    return euaPriceCache.data;
   }
+
+  // If request is already in progress, return the same promise (deduplication)
+  if (euaPricePromise) {
+    return euaPricePromise;
+  }
+
+  // Create new request promise
+  euaPricePromise = (async () => {
+    try {
+      // Call Python backend API
+      const apiPath = BACKEND_API_URL.startsWith('/') 
+        ? `${BACKEND_API_URL}/eua/price` 
+        : `${BACKEND_API_URL}/api/eua/price`;
+      const response = await axios.get(apiPath, {
+        timeout: 10000, // 10 second timeout
+        headers: {
+          'Accept': 'application/json',
+        },
+        validateStatus: (status) => {
+          // Accept 200, 429 (rate limit - will use fallback), and other statuses for fallback handling
+          return status < 500;
+        }
+      });
+
+      // Handle 429 rate limit errors gracefully
+      if (response.status === 429) {
+        console.warn('Rate limit hit for EUA price, using fallback');
+        const fallback = generateRealisticPrice();
+        // Don't cache rate limit responses
+        euaPricePromise = null;
+        return fallback;
+      }
+
+      if (response.data && response.data.price) {
+        const priceData: EUAPriceResponse = {
+          price: parseFloat(response.data.price.toFixed(2)),
+          timestamp: new Date(response.data.timestamp),
+          currency: response.data.currency || 'EUR',
+          change24h: response.data.change24h ? parseFloat(response.data.change24h.toFixed(2)) : undefined,
+        };
+
+        // Update cache for fallback
+        lastKnownPrice = priceData.price;
+        priceHistory.push(priceData.price);
+        if (priceHistory.length > 100) priceHistory.shift();
+
+        // Cache the result
+        euaPriceCache = {
+          data: priceData,
+          timestamp: now
+        };
+
+        return priceData;
+      }
+
+      // If response doesn't have expected format, fall back
+      console.warn('Backend API returned unexpected format, using fallback');
+      const fallback = generateRealisticPrice();
+      euaPricePromise = null;
+      return fallback;
+    } catch (error: any) {
+      // Handle 429 errors from axios
+      if (error.response?.status === 429) {
+        console.warn('Rate limit hit for EUA price, using fallback');
+        const fallback = generateRealisticPrice();
+        euaPricePromise = null;
+        return fallback;
+      }
+      console.warn('Error fetching EUA price from backend, using fallback:', error);
+      // Always return a price, even if it's simulated
+      const fallback = generateRealisticPrice();
+      euaPricePromise = null;
+      return fallback;
+    } finally {
+      // Clear the promise so new requests can be made after cache expires
+      // (but keep it set during the request to enable deduplication)
+      setTimeout(() => {
+        euaPricePromise = null;
+      }, 1000); // Clear after 1 second to allow deduplication window
+    }
+  })();
+
+  return euaPricePromise;
 }
 
 /**
@@ -133,6 +201,12 @@ export async function fetchEUAPriceWithRetry(
 
 /**
  * Fetches historical EUA price data from backend API
+ * 
+ * Features:
+ * - Request deduplication: If a request with same params is in progress, returns the same promise
+ * - Caching: Caches results for 5 minutes to prevent duplicate requests
+ * - Rate limit handling: Handles 429 errors gracefully
+ * 
  * @param startDate Start date (YYYY-MM-DD) or Date object, defaults to 5 years ago
  * @param endDate End date (YYYY-MM-DD) or Date object, defaults to today
  * @returns Promise with historical price data or null if fetch fails
@@ -141,42 +215,90 @@ export async function fetchEUAHistory(
   startDate?: string | Date,
   endDate?: string | Date
 ): Promise<HistoricalPriceEntry[] | null> {
-  try {
-    const params: Record<string, string> = {};
-    
-    if (startDate) {
-      params.start_date = startDate instanceof Date 
-        ? startDate.toISOString().split('T')[0]
-        : startDate;
-    }
-    
-    if (endDate) {
-      params.end_date = endDate instanceof Date
-        ? endDate.toISOString().split('T')[0]
-        : endDate;
-    }
-    
-    const apiPath = BACKEND_API_URL.startsWith('/') 
-      ? `${BACKEND_API_URL}/eua/history` 
-      : `${BACKEND_API_URL}/api/eua/history`;
-    
-    const response = await axios.get<HistoricalPriceResponse>(apiPath, {
-      params,
-      timeout: 30000, // 30 second timeout for historical data
-      headers: {
-        'Accept': 'application/json',
-      },
-    });
-
-    if (response.data && response.data.data) {
-      return response.data.data;
-    }
-
-    return null;
-  } catch (error) {
-    console.warn('Error fetching EUA history from backend:', error);
-    return null;
+  // Create cache key from params
+  const params: Record<string, string> = {};
+  if (startDate) {
+    params.start_date = startDate instanceof Date 
+      ? startDate.toISOString().split('T')[0]
+      : startDate;
   }
+  if (endDate) {
+    params.end_date = endDate instanceof Date
+      ? endDate.toISOString().split('T')[0]
+      : endDate;
+  }
+  const cacheKey = JSON.stringify(params);
+
+  // Check cache first (if within TTL and same params)
+  const now = Date.now();
+  if (euaHistoryCache && 
+      (now - euaHistoryCache.timestamp) < EUA_HISTORY_CACHE_TTL &&
+      euaHistoryCache.params === cacheKey) {
+    return euaHistoryCache.data;
+  }
+
+  // If request is already in progress with same params, return the same promise
+  if (euaHistoryPromise) {
+    return euaHistoryPromise;
+  }
+
+  // Create new request promise
+  euaHistoryPromise = (async () => {
+    try {
+      const apiPath = BACKEND_API_URL.startsWith('/') 
+        ? `${BACKEND_API_URL}/eua/history` 
+        : `${BACKEND_API_URL}/api/eua/history`;
+      
+      const response = await axios.get<HistoricalPriceResponse>(apiPath, {
+        params,
+        timeout: 30000, // 30 second timeout for historical data
+        headers: {
+          'Accept': 'application/json',
+        },
+        validateStatus: (status) => {
+          // Accept 200, 429 (rate limit), and other statuses for error handling
+          return status < 500;
+        }
+      });
+
+      // Handle 429 rate limit errors gracefully
+      if (response.status === 429) {
+        console.warn('Rate limit hit for EUA history, returning null');
+        euaHistoryPromise = null;
+        return null;
+      }
+
+      if (response.data && response.data.data) {
+        // Cache the result
+        euaHistoryCache = {
+          data: response.data.data,
+          timestamp: now,
+          params: cacheKey
+        };
+        return response.data.data;
+      }
+
+      euaHistoryPromise = null;
+      return null;
+    } catch (error: any) {
+      // Handle 429 errors from axios
+      if (error.response?.status === 429) {
+        console.warn('Rate limit hit for EUA history, returning null');
+        euaHistoryPromise = null;
+        return null;
+      }
+      console.warn('Error fetching EUA history from backend:', error);
+      euaHistoryPromise = null;
+      return null;
+    } finally {
+      // Clear the promise after a short delay
+      setTimeout(() => {
+        euaHistoryPromise = null;
+      }, 1000);
+    }
+  })();
+
+  return euaHistoryPromise;
 }
 
 export { POLLING_INTERVAL };

@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Button Example - CO2 Trading Theme</title>
+  
+  <!-- Import theme CSS variables -->
+  <link rel="stylesheet" href="../../styles/themes.css">
+  
+  <style>
+    /* Example button using CSS variables */
+    .button {
+      background-color: var(--color-primary-600);
+      color: white;
+      padding: var(--spacing-button-md);
+      border-radius: var(--border-radius-md);
+      font-size: var(--font-size-base);
+      font-family: var(--font-family-sans);
+      font-weight: var(--font-weight-medium);
+      border: none;
+      cursor: pointer;
+      transition: var(--transition-colors);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .button:hover {
+      background-color: var(--color-primary-700);
+      box-shadow: var(--shadow-md);
+    }
+
+    .button-secondary {
+      background-color: var(--color-secondary-600);
+    }
+
+    .button-secondary:hover {
+      background-color: var(--color-secondary-700);
+    }
+
+    .button-outline {
+      background-color: transparent;
+      color: var(--color-primary-600);
+      border: var(--border-width) var(--border-style-solid) var(--color-primary-600);
+    }
+
+    .button-outline:hover {
+      background-color: var(--color-primary-50);
+    }
+
+    /* Dark mode support */
+    .dark .button {
+      background-color: var(--color-primary-500);
+    }
+
+    .dark .button:hover {
+      background-color: var(--color-primary-600);
+    }
+
+    /* Container for demo */
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      padding: var(--spacing-8);
+      display: flex;
+      flex-direction: column;
+      gap: var(--spacing-4);
+    }
+
+    .button-group {
+      display: flex;
+      gap: var(--spacing-4);
+      flex-wrap: wrap;
+    }
+
+    h1 {
+      font-size: var(--font-size-2xl);
+      font-weight: var(--font-weight-semibold);
+      color: var(--color-text-primary);
+      margin-bottom: var(--spacing-6);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Button Examples</h1>
+    
+    <div class="button-group">
+      <button class="button" onclick="handleClick('primary')">
+        Primary Button
+      </button>
+      
+      <button class="button button-secondary" onclick="handleClick('secondary')">
+        Secondary Button
+      </button>
+      
+      <button class="button button-outline" onclick="handleClick('outline')">
+        Outline Button
+      </button>
+    </div>
+
+    <div>
+      <button class="button" onclick="toggleDarkMode()">
+        Toggle Dark Mode
+      </button>
+    </div>
+  </div>
+
+  <script type="module">
+    /**
+     * Button Example - Vanilla JavaScript
+     * 
+     * This example demonstrates how to use the CO2 Trading Platform Design System Theme
+     * in vanilla HTML/CSS/JavaScript. The example uses both CSS variables and JavaScript
+     * imports for theme tokens.
+     */
+
+    // Import theme tokens (if using ES modules)
+    import { theme } from '../../tokens/theme.ts';
+
+    // Example: Using theme tokens in JavaScript
+    function handleClick(variant) {
+      console.log(`${variant} button clicked!`);
+      console.log('Primary color:', theme.colors.primary[600]);
+      console.log('Spacing:', theme.spacing.component.button.md);
+    }
+
+    // Make function available globally
+    window.handleClick = handleClick;
+
+    // Toggle dark mode
+    function toggleDarkMode() {
+      document.documentElement.classList.toggle('dark');
+    }
+
+    window.toggleDarkMode = toggleDarkMode;
+
+    // Example: Dynamically set styles using theme tokens
+    function createDynamicButton(text, variant = 'primary') {
+      const button = document.createElement('button');
+      button.textContent = text;
+      
+      const variantStyles = {
+        primary: {
+          backgroundColor: theme.colors.primary[600],
+          color: 'white',
+        },
+        secondary: {
+          backgroundColor: theme.colors.secondary[600],
+          color: 'white',
+        },
+      };
+
+      Object.assign(button.style, {
+        ...variantStyles[variant],
+        padding: theme.spacing.component.button.md,
+        borderRadius: theme.borders.radius.md,
+        fontSize: theme.typography.fontSize.base[0],
+        fontFamily: theme.typography.fontFamily.sans.join(', '),
+        fontWeight: theme.typography.fontWeight.medium.toString(),
+        border: 'none',
+        cursor: 'pointer',
+        transition: theme.transitions.preset.colors,
+        boxShadow: theme.shadows.standard.sm,
+      });
+
+      return button;
+    }
+
+    // Example usage:
+    // const dynamicButton = createDynamicButton('Dynamic Button', 'primary');
+    // document.body.appendChild(dynamicButton);
+  </script>
+</body>
+</html>
+

@@ -6,71 +6,95 @@ import { getRandomSeller } from '../data/sellers';
 import { MarketOffer, CertificateType } from '../types';
 
 /**
+ * Generate volume based on weighted distribution
+ * 30% small volumes, 40% medium volumes, 30% large volumes
+ */
+function generateVolume(type: 'CEA' | 'EUA'): number {
+  const rand = Math.random();
+  if (rand < 0.3) {
+    // 30% small volumes: CEA 500-2000, EUA 200-1000
+    return type === 'CEA' 
+      ? Math.floor(Math.random() * 1500) + 500  // Range: 500-2000
+      : Math.floor(Math.random() * 800) + 200;  // Range: 200-1000
+  } else if (rand < 0.7) {
+    // 40% medium volumes: CEA 2000-6000, EUA 1000-3500
+    return type === 'CEA'
+      ? Math.floor(Math.random() * 4000) + 2000  // Range: 2000-6000
+      : Math.floor(Math.random() * 2500) + 1000; // Range: 1000-3500
+  } else {
+    // 30% large volumes: CEA 8000-15000, EUA 5000-10000
+    return type === 'CEA'
+      ? Math.floor(Math.random() * 7000) + 8000  // Range: 8000-15000
+      : Math.floor(Math.random() * 5000) + 5000; // Range: 5000-10000
+  }
+}
+
+/**
  * Component that syncs market offers with live prices
  * Ensures the best (lowest) price for each certificate type matches the live price
  */
 export default function MarketOffersSync() {
   const { marketOffers, updateMarketOffers } = useCertificates();
-  const { realTimeEUA, realTimeCER } = useStats();
+  const { realTimeEUA, realTimeCEA } = useStats();
   const initializedRef = useRef(false);
 
   // Initialize offers with live prices when they first become available
   // Delete all existing offers and recreate them only when live prices are available
   useEffect(() => {
     // If we have live prices, ensure offers are created/updated correctly
-    if (realTimeEUA.price !== null && realTimeCER.price !== null) {
+    if (realTimeEUA.price !== null && realTimeCEA.price !== null) {
       // Check if we need to recreate offers (if they don't exist or have wrong prices)
       const needsRecreation = marketOffers.length === 0 || 
         marketOffers.some(offer => 
-          (offer.type === 'CER' && offer.price < realTimeCER.price!) ||
+          (offer.type === 'CEA' && offer.price < realTimeCEA.price!) ||
           (offer.type === 'EUA' && offer.price < realTimeEUA.price!)
         );
 
       if (needsRecreation) {
         initializedRef.current = true;
-        
+
         // Delete all existing offers and create new ones with correct prices
-        const cerOffers: MarketOffer[] = Array(10).fill(null).map((_, i) => {
-          const seller = getRandomSeller('CER');
-          // First offer matches live price exactly, others are higher
+        const ceaOffers: MarketOffer[] = Array(18).fill(null).map((_, i) => {
+          const seller = getRandomSeller('CEA');
+          // First offer matches live price exactly, others are higher with smaller variation
           const price = i === 0 
-            ? realTimeCER.price! 
-            : parseFloat((realTimeCER.price! + Math.random() * 3 + 0.5).toFixed(2));
+            ? realTimeCEA.price! 
+            : parseFloat((realTimeCEA.price! + Math.random() * 1 + 0.5).toFixed(2)); // 0.5-1.5 EUR variation
           
           return {
             id: uuidv4(),
             sellerId: seller.id,
             sellerName: seller.name,
-            type: 'CER' as CertificateType,
-            amount: Math.floor(Math.random() * 5000) + 1000,
+            type: 'CEA' as CertificateType,
+            amount: generateVolume('CEA'),
             price: price,
             timestamp: new Date(),
           };
         });
         
-        const euaOffers: MarketOffer[] = Array(8).fill(null).map((_, i) => {
+        const euaOffers: MarketOffer[] = Array(15).fill(null).map((_, i) => {
           const seller = getRandomSeller('EUA');
-          // First offer matches live price exactly, others are higher
+          // First offer matches live price exactly, others are higher with smaller variation
           const price = i === 0 
             ? realTimeEUA.price! 
-            : parseFloat((realTimeEUA.price! + Math.random() * 5 + 1).toFixed(2));
+            : parseFloat((realTimeEUA.price! + Math.random() * 1 + 1).toFixed(2)); // 1-2 EUR variation
           
           return {
             id: uuidv4(),
             sellerId: seller.id,
             sellerName: seller.name,
             type: 'EUA' as CertificateType,
-            amount: Math.floor(Math.random() * 3000) + 500,
+            amount: generateVolume('EUA'),
             price: price,
             timestamp: new Date(),
           };
         });
         
         // Sort offers by price (lowest first) before setting
-        const sortedCerOffers = cerOffers.sort((a, b) => a.price - b.price);
+        const sortedCeaOffers = ceaOffers.sort((a, b) => a.price - b.price);
         const sortedEuaOffers = euaOffers.sort((a, b) => a.price - b.price);
         
-        updateMarketOffers(() => [...sortedCerOffers, ...sortedEuaOffers]);
+        updateMarketOffers(() => [...sortedCeaOffers, ...sortedEuaOffers]);
       }
     } else {
       // If live prices are not available, delete all offers
@@ -79,14 +103,14 @@ export default function MarketOffersSync() {
         initializedRef.current = false;
       }
     }
-  }, [marketOffers.length, realTimeEUA.price, realTimeCER.price, updateMarketOffers]);
+  }, [marketOffers.length, realTimeEUA.price, realTimeCEA.price, updateMarketOffers]);
 
   // Sync best prices with live prices when live prices update or offers change
   // Ensures best price matches live price and all offers are at or above live price
   // This runs continuously to catch any offers that might slip below live prices
   useEffect(() => {
     if (marketOffers.length === 0) return;
-    if (!realTimeEUA.price && !realTimeCER.price) {
+    if (!realTimeEUA.price && !realTimeCEA.price) {
       // If live prices are not available, delete all offers
       updateMarketOffers(() => []);
       return;
@@ -105,50 +129,51 @@ export default function MarketOffersSync() {
         }
       }
       
-      if (realTimeCER.price !== null) {
-        const hasInvalidCER = updatedOffers.some(o => o.type === 'CER' && o.price < realTimeCER.price!);
-        if (hasInvalidCER) {
+      if (realTimeCEA.price !== null) {
+        const hasInvalidCEA = updatedOffers.some(o => o.type === 'CEA' && o.price < realTimeCEA.price!);
+        if (hasInvalidCEA) {
           needsRecreation = true;
         }
       }
 
       // If any offers are invalid, recreate all offers
-      if (needsRecreation && realTimeEUA.price !== null && realTimeCER.price !== null) {
-        const cerOffers: MarketOffer[] = Array(10).fill(null).map((_, i) => {
-          const seller = getRandomSeller('CER');
+      if (needsRecreation && realTimeEUA.price !== null && realTimeCEA.price !== null) {
+
+        const ceaOffers: MarketOffer[] = Array(18).fill(null).map((_, i) => {
+          const seller = getRandomSeller('CEA');
           const price = i === 0 
-            ? realTimeCER.price! 
-            : parseFloat((realTimeCER.price! + Math.random() * 3 + 0.5).toFixed(2));
+            ? realTimeCEA.price! 
+            : parseFloat((realTimeCEA.price! + Math.random() * 1 + 0.5).toFixed(2)); // 0.5-1.5 EUR variation
           return {
             id: uuidv4(),
             sellerId: seller.id,
             sellerName: seller.name,
-            type: 'CER' as CertificateType,
-            amount: Math.floor(Math.random() * 5000) + 1000,
+            type: 'CEA' as CertificateType,
+            amount: generateVolume('CEA'),
             price: price,
             timestamp: new Date(),
           };
         });
         
-        const euaOffers: MarketOffer[] = Array(8).fill(null).map((_, i) => {
+        const euaOffers: MarketOffer[] = Array(15).fill(null).map((_, i) => {
           const seller = getRandomSeller('EUA');
           const price = i === 0 
             ? realTimeEUA.price! 
-            : parseFloat((realTimeEUA.price! + Math.random() * 5 + 1).toFixed(2));
+            : parseFloat((realTimeEUA.price! + Math.random() * 1 + 1).toFixed(2)); // 1-2 EUR variation
           return {
             id: uuidv4(),
             sellerId: seller.id,
             sellerName: seller.name,
             type: 'EUA' as CertificateType,
-            amount: Math.floor(Math.random() * 3000) + 500,
+            amount: generateVolume('EUA'),
             price: price,
             timestamp: new Date(),
           };
         });
         
-        const sortedCerOffers = cerOffers.sort((a, b) => a.price - b.price);
+        const sortedCeaOffers = ceaOffers.sort((a, b) => a.price - b.price);
         const sortedEuaOffers = euaOffers.sort((a, b) => a.price - b.price);
-        return [...sortedCerOffers, ...sortedEuaOffers];
+        return [...sortedCeaOffers, ...sortedEuaOffers];
       }
 
       // Otherwise, sync prices normally
@@ -176,23 +201,23 @@ export default function MarketOffersSync() {
         }
       }
 
-      // Sync CER offers with live Chinese CER price
-      if (realTimeCER.price !== null) {
-        const cerOffers = updatedOffers.filter(o => o.type === 'CER');
-        if (cerOffers.length > 0) {
-          const sortedCerOffers = [...cerOffers].sort((a, b) => a.price - b.price);
-          const bestOffer = sortedCerOffers[0];
+      // Sync CEA offers with live Chinese CEA price
+      if (realTimeCEA.price !== null) {
+        const ceaOffers = updatedOffers.filter(o => o.type === 'CEA');
+        if (ceaOffers.length > 0) {
+          const sortedCeaOffers = [...ceaOffers].sort((a, b) => a.price - b.price);
+          const bestOffer = sortedCeaOffers[0];
           
           updatedOffers = updatedOffers.map(offer => {
-            if (offer.type === 'CER') {
+            if (offer.type === 'CEA') {
               if (offer.id === bestOffer.id) {
-                if (Math.abs(offer.price - realTimeCER.price!) > 0.01) {
+                if (Math.abs(offer.price - realTimeCEA.price!) > 0.01) {
                   needsUpdate = true;
-                  return { ...offer, price: realTimeCER.price!, timestamp: new Date() };
+                  return { ...offer, price: realTimeCEA.price!, timestamp: new Date() };
                 }
-              } else if (offer.price < realTimeCER.price!) {
+              } else if (offer.price < realTimeCEA.price!) {
                 needsUpdate = true;
-                return { ...offer, price: realTimeCER.price!, timestamp: new Date() };
+                return { ...offer, price: realTimeCEA.price!, timestamp: new Date() };
               }
             }
             return offer;
@@ -202,20 +227,20 @@ export default function MarketOffersSync() {
 
       // Sort offers by type and price (lowest first) for consistent display
       if (needsUpdate) {
-        const cerOffers = updatedOffers.filter(o => o.type === 'CER').sort((a, b) => a.price - b.price);
+        const ceaOffers = updatedOffers.filter(o => o.type === 'CEA').sort((a, b) => a.price - b.price);
         const euaOffers = updatedOffers.filter(o => o.type === 'EUA').sort((a, b) => a.price - b.price);
-        updatedOffers = [...cerOffers, ...euaOffers];
+        updatedOffers = [...ceaOffers, ...euaOffers];
       }
 
       return needsUpdate ? updatedOffers : prevOffers;
     });
-  }, [realTimeEUA.price, realTimeCER.price, marketOffers.length, updateMarketOffers]);
+  }, [realTimeEUA.price, realTimeCEA.price, marketOffers.length, updateMarketOffers]);
 
   // Periodic sync check to ensure all offers are at or above live prices
   // This runs every 5 seconds to catch any offers that might slip below live prices
   useEffect(() => {
     if (marketOffers.length === 0) return;
-    if (!realTimeEUA.price && !realTimeCER.price) return;
+    if (!realTimeEUA.price && !realTimeCEA.price) return;
 
     const syncInterval = setInterval(() => {
       updateMarketOffers(prevOffers => {
@@ -246,23 +271,23 @@ export default function MarketOffersSync() {
           }
         }
 
-        // Check and fix CER offers
-        if (realTimeCER.price !== null) {
-          const cerOffers = updatedOffers.filter(o => o.type === 'CER');
-          if (cerOffers.length > 0) {
-            const sortedCerOffers = [...cerOffers].sort((a, b) => a.price - b.price);
-            const bestOffer = sortedCerOffers[0];
+        // Check and fix CEA offers
+        if (realTimeCEA.price !== null) {
+          const ceaOffers = updatedOffers.filter(o => o.type === 'CEA');
+          if (ceaOffers.length > 0) {
+            const sortedCeaOffers = [...ceaOffers].sort((a, b) => a.price - b.price);
+            const bestOffer = sortedCeaOffers[0];
             
             updatedOffers = updatedOffers.map(offer => {
-              if (offer.type === 'CER') {
+              if (offer.type === 'CEA') {
                 if (offer.id === bestOffer.id) {
-                  if (Math.abs(offer.price - realTimeCER.price!) > 0.01) {
+                  if (Math.abs(offer.price - realTimeCEA.price!) > 0.01) {
                     needsUpdate = true;
-                    return { ...offer, price: realTimeCER.price!, timestamp: new Date() };
+                    return { ...offer, price: realTimeCEA.price!, timestamp: new Date() };
                   }
-                } else if (offer.price < realTimeCER.price!) {
+                } else if (offer.price < realTimeCEA.price!) {
                   needsUpdate = true;
-                  return { ...offer, price: realTimeCER.price!, timestamp: new Date() };
+                  return { ...offer, price: realTimeCEA.price!, timestamp: new Date() };
                 }
               }
               return offer;
@@ -271,16 +296,16 @@ export default function MarketOffersSync() {
         }
 
         if (needsUpdate) {
-          const cerOffers = updatedOffers.filter(o => o.type === 'CER').sort((a, b) => a.price - b.price);
+          const ceaOffers = updatedOffers.filter(o => o.type === 'CEA').sort((a, b) => a.price - b.price);
           const euaOffers = updatedOffers.filter(o => o.type === 'EUA').sort((a, b) => a.price - b.price);
-          return [...cerOffers, ...euaOffers];
+          return [...ceaOffers, ...euaOffers];
         }
         return prevOffers;
       });
     }, 5000); // Check every 5 seconds
 
     return () => clearInterval(syncInterval);
-  }, [marketOffers.length, realTimeEUA.price, realTimeCER.price, updateMarketOffers]);
+  }, [marketOffers.length, realTimeEUA.price, realTimeCEA.price, updateMarketOffers]);
 
   // Simulate market price changes using live prices as minimums
   useEffect(() => {
@@ -296,13 +321,13 @@ export default function MarketOffersSync() {
             
             // Use live price as minimum
             let minPrice: number;
-            if (offer.type === 'CER' && realTimeCER.price !== null) {
-              minPrice = realTimeCER.price;
+            if (offer.type === 'CEA' && realTimeCEA.price !== null) {
+              minPrice = realTimeCEA.price;
             } else if (offer.type === 'EUA' && realTimeEUA.price !== null) {
               minPrice = realTimeEUA.price;
             } else {
               // Fallback to hardcoded minimums if live prices aren't available
-              minPrice = offer.type === 'CER' ? 37 : 57;
+              minPrice = offer.type === 'CEA' ? 37 : 57;
             }
             
             return {
@@ -316,35 +341,38 @@ export default function MarketOffersSync() {
         
         // 5% chance to add a new offer
         if (Math.random() < 0.05) {
-          const type: CertificateType = Math.random() < 0.6 ? 'CER' : 'EUA';
+          const type: CertificateType = Math.random() < 0.6 ? 'CEA' : 'EUA';
           const seller = getRandomSeller(type);
           
           // Use live price as base, with some variation above it
           let basePrice: number;
-          if (type === 'CER' && realTimeCER.price !== null) {
-            basePrice = realTimeCER.price;
+          if (type === 'CEA' && realTimeCEA.price !== null) {
+            basePrice = realTimeCEA.price;
           } else if (type === 'EUA' && realTimeEUA.price !== null) {
             basePrice = realTimeEUA.price;
           } else {
             // Fallback to hardcoded base prices if live prices aren't available
-            basePrice = type === 'CER' ? 40 : 62;
+            basePrice = type === 'CEA' ? 40 : 62;
           }
           
+          // Generate volume with weighted distribution
+          const amount = generateVolume(type);
+
           const newOffer: MarketOffer = {
             id: uuidv4(),
             sellerId: seller.id,
             sellerName: seller.name,
             type: type,
-            amount: Math.floor(Math.random() * (type === 'CER' ? 5000 : 3000)) + (type === 'CER' ? 1000 : 500),
-            price: parseFloat((Math.random() * (type === 'CER' ? 5 : 8) + basePrice + 0.5).toFixed(2)),
+            amount: amount,
+            price: parseFloat((Math.random() * (type === 'CEA' ? 1 : 1) + basePrice + (type === 'CEA' ? 0.5 : 1)).toFixed(2)),
             timestamp: new Date()
           };
           
           // Sort offers by type and price after adding new offer
-          const cerOffers = [...updatedOffers.filter(o => o.type === 'CER'), ...(newOffer.type === 'CER' ? [newOffer] : [])].sort((a, b) => a.price - b.price);
+          const ceaOffers = [...updatedOffers.filter(o => o.type === 'CEA'), ...(newOffer.type === 'CEA' ? [newOffer] : [])].sort((a, b) => a.price - b.price);
           const euaOffers = [...updatedOffers.filter(o => o.type === 'EUA'), ...(newOffer.type === 'EUA' ? [newOffer] : [])].sort((a, b) => a.price - b.price);
           
-          return [...cerOffers, ...euaOffers];
+          return [...ceaOffers, ...euaOffers];
         }
         
         return updatedOffers;
@@ -352,7 +380,7 @@ export default function MarketOffersSync() {
     }, 30000);
     
     return () => clearInterval(interval);
-  }, [marketOffers.length, realTimeEUA.price, realTimeCER.price, updateMarketOffers]);
+  }, [marketOffers.length, realTimeEUA.price, realTimeCEA.price, updateMarketOffers]);
 
   return null; // This component doesn't render anything
 }

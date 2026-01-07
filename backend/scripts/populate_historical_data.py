@@ -58,13 +58,13 @@ def main():
         eua_data = collector.collect_eua_history(start_date, end_date)
         logger.info(f"Collected {len(eua_data)} EUA entries")
         
-        logger.info("Collecting CER historical data...")
-        cer_data = collector.collect_cer_history(start_date, end_date, eua_data=eua_data)
-        logger.info(f"Collected {len(cer_data)} CER entries")
+        logger.info("Collecting CEA historical data...")
+        cea_data = collector.collect_cea_history(start_date, end_date, eua_data=eua_data)
+        logger.info(f"Collected {len(cea_data)} CEA entries")
         
         logger.info("Historical data population completed successfully!")
         logger.info(f"EUA data saved to: {collector.eua_file}")
-        logger.info(f"CER data saved to: {collector.cer_file}")
+        logger.info(f"CEA data saved to: {collector.cea_file}")
         
         return 0
         

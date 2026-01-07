@@ -5,7 +5,7 @@ export interface Seller {
   id: string;
   name: string;
   country: string;
-  type: 'CER' | 'EUA' | 'Both';
+  type: 'CEA' | 'EUA' | 'Both';
   verified: boolean;
 }
 
@@ -14,21 +14,21 @@ export const sellers: Seller[] = [
     id: 'S-CHN-1001',
     name: 'China Carbon Exchange',
     country: 'China',
-    type: 'CER',
+    type: 'CEA',
     verified: true
   },
   {
     id: 'S-CHN-1002',
     name: 'Beijing Climate Exchange',
     country: 'China',
-    type: 'CER',
+    type: 'CEA',
     verified: true
   },
   {
     id: 'S-CHN-1003',
     name: 'Shenzhen Energy Group',
     country: 'China',
-    type: 'CER',
+    type: 'CEA',
     verified: true
   },
   {
@@ -83,7 +83,7 @@ export const sellers: Seller[] = [
 ];
 
 // Funcție pentru a obține un vânzător aleatoriu în funcție de tipul certificatului
-export function getRandomSeller(type: 'CER' | 'EUA'): Seller {
+export function getRandomSeller(type: 'CEA' | 'EUA'): Seller {
   const eligibleSellers = sellers.filter(seller => 
     seller.type === type || seller.type === 'Both'
   );
